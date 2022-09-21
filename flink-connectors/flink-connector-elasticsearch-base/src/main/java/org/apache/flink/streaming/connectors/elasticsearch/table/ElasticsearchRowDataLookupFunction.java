@@ -22,6 +22,7 @@ import org.apache.flink.annotation.Internal;
 import org.apache.flink.api.common.serialization.DeserializationSchema;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.streaming.connectors.elasticsearch.ElasticsearchApiCallBridge;
+import org.apache.flink.table.connector.source.LookupTableSource;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.data.util.DataFormatConverters;
 import org.apache.flink.table.functions.FunctionContext;
@@ -48,6 +49,7 @@ import java.util.stream.IntStream;
 
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
+/** A lookup function implementing {@link LookupTableSource} in elasticsearch connector. */
 @Internal
 public class ElasticsearchRowDataLookupFunction<C extends AutoCloseable> extends LookupFunction {
 

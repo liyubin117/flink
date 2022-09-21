@@ -43,14 +43,11 @@ import org.apache.flink.table.factories.FactoryUtil;
 import org.apache.flink.table.factories.SerializationFormatFactory;
 import org.apache.flink.table.types.DataType;
 import org.apache.flink.table.utils.TableSchemaUtils;
-import org.apache.flink.util.Preconditions;
 import org.apache.flink.util.StringUtils;
 
 import javax.annotation.Nullable;
 
-import java.time.Duration;
 import java.time.ZoneId;
-import java.util.Arrays;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -124,7 +121,6 @@ public class Elasticsearch6DynamicTableFactory
                                 .FORMAT_OPTION);
 
         helper.validate();
-        validateLookup(options);
 
         Configuration configuration = new Configuration();
         context.getCatalogTable().getOptions().forEach(configuration::setString);
@@ -167,18 +163,9 @@ public class Elasticsearch6DynamicTableFactory
     @Nullable
     private LookupCache getLookupCache(ReadableConfig tableOptions) {
         LookupCache cache = null;
-        // Legacy cache options
-        if (tableOptions.get(PARTIAL_CACHE_MAX_ROWS) > 0
-                && tableOptions.get(PARTIAL_CACHE_EXPIRE_AFTER_WRITE).compareTo(Duration.ZERO)
-                        > 0) {
-            cache =
-                    DefaultLookupCache.newBuilder()
-                            .maximumSize(tableOptions.get(PARTIAL_CACHE_MAX_ROWS))
-                            .expireAfterWrite(tableOptions.get(PARTIAL_CACHE_EXPIRE_AFTER_WRITE))
-                            .cacheMissingKey(tableOptions.get(PARTIAL_CACHE_CACHE_MISSING_KEY))
-                            .build();
-        }
-        if (tableOptions.get(CACHE_TYPE).equals(LookupOptions.LookupCacheType.PARTIAL)) {
+        if (tableOptions
+                .get(LookupOptions.CACHE_TYPE)
+                .equals(LookupOptions.LookupCacheType.PARTIAL)) {
             cache = DefaultLookupCache.fromConfig(tableOptions);
         }
         return cache;
@@ -238,49 +225,6 @@ public class Elasticsearch6DynamicTableFactory
                                     config.getUsername().get(),
                                     config.getPassword().orElse("")));
         }
-    }
-
-    private void validateLookup(ReadableConfig config) {
-        checkAllOrNone(
-                config,
-                new ConfigOption[] {PARTIAL_CACHE_MAX_ROWS, PARTIAL_CACHE_EXPIRE_AFTER_WRITE});
-        long cacheMaxRows = config.get(PARTIAL_CACHE_MAX_ROWS);
-        long cacheSeconds = config.get(PARTIAL_CACHE_EXPIRE_AFTER_WRITE).getSeconds();
-        long cacheMaxRetries = config.get(MAX_RETRIES);
-
-        validate(
-                cacheMaxRows == -1 || cacheMaxRows >= 1,
-                () ->
-                        String.format(
-                                "The value of '%s' option should be at least 1 and shouldn't be negative, but is %s.",
-                                PARTIAL_CACHE_MAX_ROWS.key(), cacheMaxRows));
-        validate(
-                cacheSeconds >= 1,
-                () ->
-                        String.format(
-                                "The value of '%s' option should be at least 1, but is %s.",
-                                PARTIAL_CACHE_EXPIRE_AFTER_WRITE.key(), cacheSeconds));
-        validate(
-                cacheMaxRetries >= 0,
-                () ->
-                        String.format(
-                                "The value of '%s' option shouldn't be negative, but is %s.",
-                                MAX_RETRIES.key(), cacheMaxRetries));
-    }
-
-    private void checkAllOrNone(ReadableConfig config, ConfigOption<?>[] configOptions) {
-        int presentCount = 0;
-        for (ConfigOption<?> configOption : configOptions) {
-            if (config.getOptional(configOption).isPresent()) {
-                presentCount++;
-            }
-        }
-        String[] propertyNames =
-                Arrays.stream(configOptions).map(ConfigOption::key).toArray(String[]::new);
-        Preconditions.checkArgument(
-                configOptions.length == presentCount || presentCount == 0,
-                "Either all or none of the following options should be provided:\n"
-                        + String.join("\n", propertyNames));
     }
 
     private static void validate(boolean condition, Supplier<String> message) {
