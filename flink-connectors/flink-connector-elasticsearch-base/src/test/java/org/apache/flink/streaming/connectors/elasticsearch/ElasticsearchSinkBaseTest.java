@@ -607,16 +607,13 @@ public class ElasticsearchSinkBaseTest {
         }
 
         @Override
-        public Tuple2<String, String[]> search(
-                Client client,
-                SearchRequest searchRequest) throws IOException {
+        public Tuple2<String, String[]> search(Client client, SearchRequest searchRequest)
+                throws IOException {
             return null;
         }
 
         @Override
-        public void close(Client client) throws IOException {
-
-        }
+        public void close(Client client) throws IOException {}
 
         @Nullable
         @Override

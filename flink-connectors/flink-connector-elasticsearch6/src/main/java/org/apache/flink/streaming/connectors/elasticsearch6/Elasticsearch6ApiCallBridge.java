@@ -61,7 +61,8 @@ public class Elasticsearch6ApiCallBridge
     /** The factory to configure the rest client. */
     private final RestClientFactory restClientFactory;
 
-    public Elasticsearch6ApiCallBridge(List<HttpHost> httpHosts, RestClientFactory restClientFactory) {
+    public Elasticsearch6ApiCallBridge(
+            List<HttpHost> httpHosts, RestClientFactory restClientFactory) {
         Preconditions.checkArgument(httpHosts != null && !httpHosts.isEmpty());
         this.httpHosts = httpHosts;
         this.restClientFactory = Preconditions.checkNotNull(restClientFactory);
@@ -85,13 +86,13 @@ public class Elasticsearch6ApiCallBridge
     }
 
     @Override
-    public Tuple2<String, String[]> search(RestHighLevelClient client, SearchRequest searchRequest) throws IOException {
+    public Tuple2<String, String[]> search(RestHighLevelClient client, SearchRequest searchRequest)
+            throws IOException {
         SearchResponse searchResponse = client.search(searchRequest);
         SearchHit[] searchHits = searchResponse.getHits().getHits();
         return new Tuple2<>(
                 searchResponse.getScrollId(),
-                Stream.of(searchHits).map(SearchHit::getSourceAsString).toArray(String[]::new)
-        );
+                Stream.of(searchHits).map(SearchHit::getSourceAsString).toArray(String[]::new));
     }
 
     @Override

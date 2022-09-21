@@ -19,7 +19,6 @@
 package org.apache.flink.streaming.connectors.elasticsearch;
 
 import org.apache.flink.annotation.Internal;
-
 import org.apache.flink.api.java.tuple.Tuple2;
 
 import org.elasticsearch.action.bulk.BulkItemResponse;

@@ -33,7 +33,6 @@ import org.apache.flink.table.connector.source.lookup.cache.LookupCache;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.types.DataType;
 import org.apache.flink.util.Preconditions;
-
 import org.apache.flink.util.StringUtils;
 
 import org.elasticsearch.client.RestHighLevelClient;
@@ -41,8 +40,8 @@ import org.elasticsearch.client.RestHighLevelClient;
 import javax.annotation.Nullable;
 
 /**
- * A {@link DynamicTableSource} that describes how to create a {@link Elasticsearch7DynamicSource} from a logical
- * description.
+ * A {@link DynamicTableSource} that describes how to create a {@link Elasticsearch7DynamicSource}
+ * from a logical description.
  */
 @Internal
 public class Elasticsearch7DynamicSource implements LookupTableSource, SupportsProjectionPushDown {
@@ -73,34 +72,39 @@ public class Elasticsearch7DynamicSource implements LookupTableSource, SupportsP
                 && config.getPassword().isPresent()
                 && !StringUtils.isNullOrWhitespaceOnly(config.getUsername().get())
                 && !StringUtils.isNullOrWhitespaceOnly(config.getPassword().get())) {
-            restClientFactory = new Elasticsearch7DynamicSink.AuthRestClientFactory(
-                    config.getPathPrefix().orElse(null),
-                    config.getUsername().get(),
-                    config.getPassword().get());
+            restClientFactory =
+                    new Elasticsearch7DynamicSink.AuthRestClientFactory(
+                            config.getPathPrefix().orElse(null),
+                            config.getUsername().get(),
+                            config.getPassword().get());
         } else {
-            restClientFactory = new Elasticsearch7DynamicSink.DefaultRestClientFactory(config.getPathPrefix().orElse(null));
+            restClientFactory =
+                    new Elasticsearch7DynamicSink.DefaultRestClientFactory(
+                            config.getPathPrefix().orElse(null));
         }
 
-        Elasticsearch7ApiCallBridge elasticsearch6ApiCallBridge = new Elasticsearch7ApiCallBridge(config.getHosts(), restClientFactory);
+        Elasticsearch7ApiCallBridge elasticsearch6ApiCallBridge =
+                new Elasticsearch7ApiCallBridge(config.getHosts(), restClientFactory);
 
         // Elasticsearch only support non-nested look up keys
         String[] keyNames = new String[context.getKeys().length];
         for (int i = 0; i < keyNames.length; i++) {
             int[] innerKeyArr = context.getKeys()[i];
-            Preconditions.checkArgument(innerKeyArr.length == 1,
-                    "Elasticsearch only support non-nested look up keys");
+            Preconditions.checkArgument(
+                    innerKeyArr.length == 1, "Elasticsearch only support non-nested look up keys");
             keyNames[i] = DataType.getFieldNames(physicalRowDataType).get(innerKeyArr[0]);
         }
 
-        ElasticsearchRowDataLookupFunction<RestHighLevelClient> lookupFunction =  new ElasticsearchRowDataLookupFunction<>(
-                this.format.createRuntimeDecoder(context, physicalRowDataType),
-                lookupMaxRetryTimes,
-                config.getIndex(),
-                config.getDocumentType(),
-                DataType.getFieldNames(physicalRowDataType).toArray(new String[0]),
-                DataType.getFieldDataTypes(physicalRowDataType).toArray(new DataType[0]),
-                keyNames,
-                elasticsearch6ApiCallBridge);
+        ElasticsearchRowDataLookupFunction<RestHighLevelClient> lookupFunction =
+                new ElasticsearchRowDataLookupFunction<>(
+                        this.format.createRuntimeDecoder(context, physicalRowDataType),
+                        lookupMaxRetryTimes,
+                        config.getIndex(),
+                        config.getDocumentType(),
+                        DataType.getFieldNames(physicalRowDataType).toArray(new String[0]),
+                        DataType.getFieldDataTypes(physicalRowDataType).toArray(new DataType[0]),
+                        keyNames,
+                        elasticsearch6ApiCallBridge);
         if (lookupCache != null) {
             return PartialCachingLookupProvider.of(lookupFunction, lookupCache);
         } else {
@@ -110,7 +114,8 @@ public class Elasticsearch7DynamicSource implements LookupTableSource, SupportsP
 
     @Override
     public DynamicTableSource copy() {
-        return new Elasticsearch7DynamicSource(format, config, physicalRowDataType, lookupMaxRetryTimes, lookupCache);
+        return new Elasticsearch7DynamicSource(
+                format, config, physicalRowDataType, lookupMaxRetryTimes, lookupCache);
     }
 
     @Override

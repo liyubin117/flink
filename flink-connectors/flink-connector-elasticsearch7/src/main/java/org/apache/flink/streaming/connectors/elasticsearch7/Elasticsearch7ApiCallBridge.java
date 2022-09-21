@@ -62,7 +62,8 @@ public class Elasticsearch7ApiCallBridge
     /** The factory to configure the rest client. */
     private final RestClientFactory restClientFactory;
 
-    public Elasticsearch7ApiCallBridge(List<HttpHost> httpHosts, RestClientFactory restClientFactory) {
+    public Elasticsearch7ApiCallBridge(
+            List<HttpHost> httpHosts, RestClientFactory restClientFactory) {
         Preconditions.checkArgument(httpHosts != null && !httpHosts.isEmpty());
         this.httpHosts = httpHosts;
         this.restClientFactory = Preconditions.checkNotNull(restClientFactory);
@@ -89,13 +90,13 @@ public class Elasticsearch7ApiCallBridge
     }
 
     @Override
-    public Tuple2<String, String[]> search(RestHighLevelClient client, SearchRequest searchRequest) throws IOException {
+    public Tuple2<String, String[]> search(RestHighLevelClient client, SearchRequest searchRequest)
+            throws IOException {
         SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
         SearchHit[] searchHits = searchResponse.getHits().getHits();
         return new Tuple2<>(
                 searchResponse.getScrollId(),
-                Stream.of(searchHits).map(SearchHit::getSourceAsString).toArray(String[]::new)
-        );
+                Stream.of(searchHits).map(SearchHit::getSourceAsString).toArray(String[]::new));
     }
 
     @Override

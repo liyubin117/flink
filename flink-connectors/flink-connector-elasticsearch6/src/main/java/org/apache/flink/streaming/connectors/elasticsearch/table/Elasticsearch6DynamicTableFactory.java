@@ -79,9 +79,13 @@ import static org.apache.flink.table.connector.source.lookup.LookupOptions.PARTI
 import static org.apache.flink.table.connector.source.lookup.LookupOptions.PARTIAL_CACHE_EXPIRE_AFTER_WRITE;
 import static org.apache.flink.table.connector.source.lookup.LookupOptions.PARTIAL_CACHE_MAX_ROWS;
 
-/** A {@link DynamicTableFactory} for discovering {@link Elasticsearch6DynamicSource} and {@link Elasticsearch6DynamicSink}. */
+/**
+ * A {@link DynamicTableFactory} for discovering {@link Elasticsearch6DynamicSource} and {@link
+ * Elasticsearch6DynamicSink}.
+ */
 @Internal
-public class Elasticsearch6DynamicTableFactory implements DynamicTableSourceFactory, DynamicTableSinkFactory {
+public class Elasticsearch6DynamicTableFactory
+        implements DynamicTableSourceFactory, DynamicTableSinkFactory {
     private static final Set<ConfigOption<?>> requiredOptions =
             Stream.of(HOSTS_OPTION, INDEX_OPTION, DOCUMENT_TYPE_OPTION).collect(Collectors.toSet());
     private static final Set<ConfigOption<?>> optionalOptions =
@@ -110,32 +114,29 @@ public class Elasticsearch6DynamicTableFactory implements DynamicTableSourceFact
     @Override
     public DynamicTableSource createDynamicTableSource(Context context) {
         DataType physicalRowDataType = context.getPhysicalRowDataType();
-        final FactoryUtil.TableFactoryHelper helper = FactoryUtil.createTableFactoryHelper(
-                this,
-                context);
+        final FactoryUtil.TableFactoryHelper helper =
+                FactoryUtil.createTableFactoryHelper(this, context);
         final ReadableConfig options = helper.getOptions();
-        final DecodingFormat<DeserializationSchema<RowData>> format = helper.discoverDecodingFormat(
-                DeserializationFormatFactory.class,
-                org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.FORMAT_OPTION);
+        final DecodingFormat<DeserializationSchema<RowData>> format =
+                helper.discoverDecodingFormat(
+                        DeserializationFormatFactory.class,
+                        org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions
+                                .FORMAT_OPTION);
 
         helper.validate();
         validateLookup(options);
 
         Configuration configuration = new Configuration();
-        context.getCatalogTable()
-                .getOptions()
-                .forEach(configuration::setString);
-        Elasticsearch6Configuration config = new Elasticsearch6Configuration(
-                configuration,
-                context.getClassLoader());
+        context.getCatalogTable().getOptions().forEach(configuration::setString);
+        Elasticsearch6Configuration config =
+                new Elasticsearch6Configuration(configuration, context.getClassLoader());
 
         return new Elasticsearch6DynamicSource(
                 format,
                 config,
                 physicalRowDataType,
                 options.get(MAX_RETRIES),
-                getLookupCache(options)
-        );
+                getLookupCache(options));
     }
 
     @Override
@@ -168,7 +169,8 @@ public class Elasticsearch6DynamicTableFactory implements DynamicTableSourceFact
         LookupCache cache = null;
         // Legacy cache options
         if (tableOptions.get(PARTIAL_CACHE_MAX_ROWS) > 0
-                && tableOptions.get(PARTIAL_CACHE_EXPIRE_AFTER_WRITE).compareTo(Duration.ZERO) > 0) {
+                && tableOptions.get(PARTIAL_CACHE_EXPIRE_AFTER_WRITE).compareTo(Duration.ZERO)
+                        > 0) {
             cache =
                     DefaultLookupCache.newBuilder()
                             .maximumSize(tableOptions.get(PARTIAL_CACHE_MAX_ROWS))
@@ -176,9 +178,7 @@ public class Elasticsearch6DynamicTableFactory implements DynamicTableSourceFact
                             .cacheMissingKey(tableOptions.get(PARTIAL_CACHE_CACHE_MISSING_KEY))
                             .build();
         }
-        if (tableOptions
-                .get(CACHE_TYPE)
-                .equals(LookupOptions.LookupCacheType.PARTIAL)) {
+        if (tableOptions.get(CACHE_TYPE).equals(LookupOptions.LookupCacheType.PARTIAL)) {
             cache = DefaultLookupCache.fromConfig(tableOptions);
         }
         return cache;
@@ -241,31 +241,31 @@ public class Elasticsearch6DynamicTableFactory implements DynamicTableSourceFact
     }
 
     private void validateLookup(ReadableConfig config) {
-        checkAllOrNone(config, new ConfigOption[] {PARTIAL_CACHE_MAX_ROWS, PARTIAL_CACHE_EXPIRE_AFTER_WRITE});
+        checkAllOrNone(
+                config,
+                new ConfigOption[] {PARTIAL_CACHE_MAX_ROWS, PARTIAL_CACHE_EXPIRE_AFTER_WRITE});
         long cacheMaxRows = config.get(PARTIAL_CACHE_MAX_ROWS);
         long cacheSeconds = config.get(PARTIAL_CACHE_EXPIRE_AFTER_WRITE).getSeconds();
         long cacheMaxRetries = config.get(MAX_RETRIES);
 
         validate(
                 cacheMaxRows == -1 || cacheMaxRows >= 1,
-                () -> String.format(
-                        "The value of '%s' option should be at least 1 and shouldn't be negative, but is %s.",
-                        PARTIAL_CACHE_MAX_ROWS.key(),
-                        cacheMaxRows)
-        );
+                () ->
+                        String.format(
+                                "The value of '%s' option should be at least 1 and shouldn't be negative, but is %s.",
+                                PARTIAL_CACHE_MAX_ROWS.key(), cacheMaxRows));
         validate(
                 cacheSeconds >= 1,
-                () -> String.format(
-                        "The value of '%s' option should be at least 1, but is %s.",
-                        PARTIAL_CACHE_EXPIRE_AFTER_WRITE.key(),
-                        cacheSeconds)
-        );
+                () ->
+                        String.format(
+                                "The value of '%s' option should be at least 1, but is %s.",
+                                PARTIAL_CACHE_EXPIRE_AFTER_WRITE.key(), cacheSeconds));
         validate(
                 cacheMaxRetries >= 0,
-                () -> String.format(
-                        "The value of '%s' option shouldn't be negative, but is %s.",
-                        MAX_RETRIES.key(), cacheMaxRetries)
-        );
+                () ->
+                        String.format(
+                                "The value of '%s' option shouldn't be negative, but is %s.",
+                                MAX_RETRIES.key(), cacheMaxRetries));
     }
 
     private void checkAllOrNone(ReadableConfig config, ConfigOption<?>[] configOptions) {

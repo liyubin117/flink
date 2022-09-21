@@ -111,8 +111,7 @@ public class Elasticsearch7DynamicSinkITCase extends TestLogger {
 
         SinkFunctionProvider sinkRuntimeProvider =
                 (SinkFunctionProvider)
-                        factory
-                                .createDynamicTableSink(
+                        factory.createDynamicTableSink(
                                         context()
                                                 .withSchema(schema)
                                                 .withOption(
