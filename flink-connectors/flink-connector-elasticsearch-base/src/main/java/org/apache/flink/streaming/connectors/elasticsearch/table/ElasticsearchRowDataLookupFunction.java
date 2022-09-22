@@ -126,6 +126,7 @@ public class ElasticsearchRowDataLookupFunction<C extends AutoCloseable> extends
         }
         searchSourceBuilder = new SearchSourceBuilder();
         searchSourceBuilder.fetchSource(producedNames, null);
+        deserializationSchema.open(null);
     }
 
     @Override
@@ -133,9 +134,7 @@ public class ElasticsearchRowDataLookupFunction<C extends AutoCloseable> extends
         BoolQueryBuilder lookupCondition = new BoolQueryBuilder();
         for (int i = 0; i < lookupKeys.length; i++) {
             lookupCondition.must(
-                    new TermQueryBuilder(
-                            lookupKeys[i],
-                            converters[i].toExternal(keyRow.getRow(i, keyRow.getArity()))));
+                    new TermQueryBuilder(lookupKeys[i], converters[i].toExternal(keyRow, i)));
         }
         searchSourceBuilder.query(lookupCondition);
         searchRequest.source(searchSourceBuilder);
@@ -147,7 +146,7 @@ public class ElasticsearchRowDataLookupFunction<C extends AutoCloseable> extends
                 if (searchResponse.f1.length > 0) {
                     String[] result = searchResponse.f1;
                     for (String s : result) {
-                        RowData row = parseSearchHit(s);
+                        RowData row = parseSearchResult(s);
                         rows.add(row);
                     }
                     rows.trimToSize();
@@ -170,10 +169,10 @@ public class ElasticsearchRowDataLookupFunction<C extends AutoCloseable> extends
         return Collections.emptyList();
     }
 
-    private RowData parseSearchHit(String hit) {
+    private RowData parseSearchResult(String result) {
         RowData row = null;
         try {
-            row = deserializationSchema.deserialize(hit.getBytes());
+            row = deserializationSchema.deserialize(result.getBytes());
         } catch (IOException e) {
             LOG.error("Deserialize search hit failed: " + e.getMessage());
         }
