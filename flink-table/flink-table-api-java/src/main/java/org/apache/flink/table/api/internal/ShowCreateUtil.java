@@ -82,7 +82,11 @@ class ShowCreateUtil {
                                 sb.append(e);
                             });
         }
-        // TODO: Print the column comment until FLINK-18958 is fixed
+        Optional<String> comment = column.getComment();
+        if (comment.isPresent()) {
+            sb.append(" ");
+            sb.append(String.format("comment '%s'", comment.get()));
+        }
         return sb.toString();
     }
 

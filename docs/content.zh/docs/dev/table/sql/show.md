@@ -540,7 +540,7 @@ SHOW TABLES [ ( FROM | IN ) [catalog_name.]database_name ] [ [NOT] LIKE <sql_lik
 * dim
 
 在会话的当前库下有如下表：
-* fights
+* items
 * orders
 
 - 显示指定库的所有表。

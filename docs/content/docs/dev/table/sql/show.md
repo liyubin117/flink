@@ -540,7 +540,7 @@ Assumes that the `db1` database located in `catalog1` catalog has the following 
 * dim
 
 the current database in session has the following tables:
-* fights
+* items
 * orders
 
 - Shows all tables of the given database.
