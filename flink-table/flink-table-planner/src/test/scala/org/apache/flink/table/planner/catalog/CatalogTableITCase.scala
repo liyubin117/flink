@@ -1006,15 +1006,15 @@ class CatalogTableITCase(isStreamingMode: Boolean) extends AbstractTestBase {
     val executedDDL =
       """
         |create temporary table TBL1 (
-        |  a bigint not null comment 'this is column a which part of primary key',
+        |  a bigint not null,
         |  h string,
         |  g as 2*(a+1),
-        |  b string not null comment 'this is column b which part of primary key',
+        |  b string not null,
         |  c bigint metadata virtual,
         |  e row<name string, age int, flag boolean>,
         |  f as myfunc(a),
-        |  ts1 timestamp(3) comment 'notice: watermark',
-        |  ts2 timestamp_ltz(3) metadata from 'timestamp' comment 'notice: metadata column',
+        |  ts1 timestamp(3),
+        |  ts2 timestamp_ltz(3) metadata from 'timestamp',
         |  `__source__` varchar(255),
         |  proc as proctime(),
         |  watermark for ts1 as cast(timestampadd(hour, 8, ts1) as timestamp(3)),
@@ -1029,19 +1029,78 @@ class CatalogTableITCase(isStreamingMode: Boolean) extends AbstractTestBase {
 
     val expectedDDL =
       """ |CREATE TEMPORARY TABLE `default_catalog`.`default_database`.`TBL1` (
-        |  `a` BIGINT NOT NULL comment 'this is column a which part of primary key',
+        |  `a` BIGINT NOT NULL,
         |  `h` VARCHAR(2147483647),
         |  `g` AS 2 * (`a` + 1),
-        |  `b` VARCHAR(2147483647) NOT NULL comment 'this is column b which part of primary key',
+        |  `b` VARCHAR(2147483647) NOT NULL,
         |  `c` BIGINT METADATA VIRTUAL,
         |  `e` ROW<`name` VARCHAR(2147483647), `age` INT, `flag` BOOLEAN>,
         |  `f` AS `default_catalog`.`default_database`.`myfunc`(`a`),
-        |  `ts1` TIMESTAMP(3) comment 'notice: watermark',
-        |  `ts2` TIMESTAMP(3) WITH LOCAL TIME ZONE METADATA FROM 'timestamp' comment 'notice: metadata column',
+        |  `ts1` TIMESTAMP(3),
+        |  `ts2` TIMESTAMP(3) WITH LOCAL TIME ZONE METADATA FROM 'timestamp',
         |  `__source__` VARCHAR(255),
         |  `proc` AS PROCTIME(),
         |  WATERMARK FOR `ts1` AS CAST(TIMESTAMPADD(HOUR, 8, `ts1`) AS TIMESTAMP(3)),
         |  CONSTRAINT `test_constraint` PRIMARY KEY (`a`, `b`) NOT ENFORCED
+        |) COMMENT 'test show create table statement'
+        |PARTITIONED BY (`b`, `h`)
+        |WITH (
+        |  'connector' = 'kafka',
+        |  'kafka.topic' = 'log.test'
+        |)
+        |""".stripMargin
+    tableEnv.executeSql(executedDDL)
+    val row = tableEnv.executeSql("SHOW CREATE TABLE `TBL1`").collect().next()
+    assertEquals(expectedDDL, row.getField(0))
+
+    expectedEx.expect(classOf[ValidationException])
+    expectedEx.expectMessage(
+      "Could not execute SHOW CREATE TABLE. " +
+        "Table with identifier `default_catalog`.`default_database`.`tmp` does not exist.")
+    tableEnv.executeSql("SHOW CREATE TABLE `tmp`")
+  }
+
+  @Test
+  def testCreateTableWithCommentAndShowCreateTable(): Unit = {
+    val executedDDL =
+      """
+        |create temporary table TBL1 (
+        |  pk1 bigint not null comment 'this is column pk1 which part of primary key',
+        |  h string,
+        |  g as 2*(a+1) comment comment 'notice: computed column, expression ''2*(`a`+1)''.',
+        |  pk2 string not null comment 'this is column pk2 which part of primary key',
+        |  c bigint metadata virtual,
+        |  e row<name string, age int, flag boolean>,
+        |  f as myfunc(a),
+        |  ts1 timestamp(3) comment 'notice: watermark.',
+        |  ts2 timestamp_ltz(3) metadata from 'timestamp' comment 'notice: metadata column named ''ts2''.',
+        |  `__source__` varchar(255),
+        |  proc as proctime(),
+        |  watermark for ts1 as cast(timestampadd(hour, 8, ts1) as timestamp(3)),
+        |  constraint test_constraint primary key (pk1, pk2) not enforced
+        |) comment 'test show create table statement'
+        |partitioned by (b,h)
+        |with (
+        |  'connector' = 'kafka',
+        |  'kafka.topic' = 'log.test'
+        |)
+        |""".stripMargin
+
+    val expectedDDL =
+      """ |CREATE TEMPORARY TABLE `default_catalog`.`default_database`.`TBL1` (
+        |  `pk1` BIGINT NOT NULL COMMENT 'this is column pk1 which part of primary key',
+        |  `h` VARCHAR(2147483647),
+        |  `g` AS 2 * (`a` + 1) COMMENT 'notice: computed column, expression ''2*(`a`+1)''.',
+        |  `pk2` VARCHAR(2147483647) NOT NULL COMMENT 'this is column pk2 which part of primary key',
+        |  `c` BIGINT METADATA VIRTUAL,
+        |  `e` ROW<`name` VARCHAR(2147483647), `age` INT, `flag` BOOLEAN>,
+        |  `f` AS `default_catalog`.`default_database`.`myfunc`(`a`),
+        |  `ts1` TIMESTAMP(3) COMMENT 'notice: watermark.',
+        |  `ts2` TIMESTAMP(3) WITH LOCAL TIME ZONE METADATA FROM 'timestamp' COMMENT 'notice: metadata column named ''ts2''.',
+        |  `__source__` VARCHAR(255),
+        |  `proc` AS PROCTIME(),
+        |  WATERMARK FOR `ts1` AS CAST(TIMESTAMPADD(HOUR, 8, `ts1`) AS TIMESTAMP(3)),
+        |  CONSTRAINT `test_constraint` PRIMARY KEY (`pk1`, `pk2`) NOT ENFORCED
         |) COMMENT 'test show create table statement'
         |PARTITIONED BY (`b`, `h`)
         |WITH (

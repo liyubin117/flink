@@ -82,11 +82,15 @@ class ShowCreateUtil {
                                 sb.append(e);
                             });
         }
-        Optional<String> comment = column.getComment();
-        if (comment.isPresent()) {
-            sb.append(" ");
-            sb.append(String.format("comment '%s'", comment.get()));
-        }
+        column.getComment()
+                .ifPresent(
+                        comment -> {
+                            sb.append(" ");
+                            sb.append(
+                                    String.format(
+                                            "COMMENT '%s'",
+                                            EncodingUtils.escapeSingleQuotes(comment)));
+                        });
         return sb.toString();
     }
 
