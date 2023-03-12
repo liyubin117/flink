@@ -957,11 +957,11 @@ show create table orders3;
 |                                                                                                                                                                                                                                                                                                                                                                                                                                                                         result |
 +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | CREATE TABLE `default_catalog`.`default_database`.`orders3` (
-  `user` BIGINT NOT NULL comment 'this is the first column',
+  `user` BIGINT NOT NULL COMMENT 'this is the first column',
   `product` VARCHAR(32),
   `amount` INT,
-  `ts` TIMESTAMP(3) comment 'notice: watermark',
-  `ptime` AS PROCTIME() comment 'notice: computed column',
+  `ts` TIMESTAMP(3) COMMENT 'notice: watermark',
+  `ptime` AS PROCTIME() COMMENT 'notice: computed column',
   WATERMARK FOR `ts` AS `ts` - INTERVAL '1' SECOND,
   CONSTRAINT `PK_3599338` PRIMARY KEY (`user`) NOT ENFORCED
 ) WITH (

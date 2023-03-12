@@ -85,11 +85,13 @@ class ShowCreateUtil {
         column.getComment()
                 .ifPresent(
                         comment -> {
-                            sb.append(" ");
-                            sb.append(
-                                    String.format(
-                                            "COMMENT '%s'",
-                                            EncodingUtils.escapeSingleQuotes(comment)));
+                            if (StringUtils.isNotEmpty(comment)) {
+                                sb.append(" ");
+                                sb.append(
+                                        String.format(
+                                                "COMMENT '%s'",
+                                                EncodingUtils.escapeSingleQuotes(comment)));
+                            }
                         });
         return sb.toString();
     }
