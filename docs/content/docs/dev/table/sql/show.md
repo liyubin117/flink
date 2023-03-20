@@ -611,6 +611,46 @@ SHOW CREATE TABLE
 
 Show create table statement for specified table.
 
+The output includes the table name, column names, data types, constraints, comments, and configurations.
+
+It is a very useful statement when you need to understand the structure, configuration and constraints of an existing table or to recreate the table in another database.
+
+Assumes that the table `orders` is created as follows:
+```sql
+CREATE TABLE orders (
+  user BIGINT NOT NULL comment 'this is the primary key, named 'user'.',
+  product VARCHAR(32),
+  amount INT,
+  ts TIMESTAMP(3) comment 'notice: watermark, named 'ts'.',
+  ptime AS PROCTIME() comment 'notice: computed column, named 'ptime'.',
+  WATERMARK FOR ts AS ts - INTERVAL '1' SECOND,
+  CONSTRAINT `PK_3599338` PRIMARY KEY (`user`) NOT ENFORCED
+) WITH (
+  'connector' = 'datagen'
+);
+```
+Shows the creation statement.
+```sql
+show create table orders;
++---------------------------------------------------------------------------------------------+
+|                                                                                      result |
++---------------------------------------------------------------------------------------------+
+| CREATE TABLE `default_catalog`.`default_database`.`orders` (
+  `user` BIGINT NOT NULL COMMENT 'this is the primary key, named 'user'.',
+  `product` VARCHAR(32),
+  `amount` INT,
+  `ts` TIMESTAMP(3) COMMENT 'notice: watermark, named 'ts'.',
+  `ptime` AS PROCTIME() COMMENT 'notice: computed column, named 'ptime'.',
+  WATERMARK FOR `ts` AS `ts` - INTERVAL '1' SECOND,
+  CONSTRAINT `PK_3599338` PRIMARY KEY (`user`) NOT ENFORCED
+) WITH (
+  'connector' = 'datagen'
+)
+ |
++---------------------------------------------------------------------------------------------+
+1 row in set
+```
+
 <span class="label label-danger">Attention</span> Currently `SHOW CREATE TABLE` only supports table that is created by Flink SQL DDL.
 
 ## SHOW COLUMNS

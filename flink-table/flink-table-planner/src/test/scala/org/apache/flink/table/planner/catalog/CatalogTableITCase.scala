@@ -1112,7 +1112,7 @@ class CatalogTableITCase(isStreamingMode: Boolean) extends AbstractTestBase {
         |""".stripMargin
     tableEnv.executeSql(executedDDL)
     val row = tableEnv.executeSql("SHOW CREATE TABLE `TBL1`").collect().next()
-    assertEquals(expectedDDL, row.getField(0))
+    assertEquals(expectedDDL, row.getField(0).toString)
   }
 
   @Test

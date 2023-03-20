@@ -2485,7 +2485,7 @@ class TableEnvironmentTest {
     val sourceDDL =
       """
         |CREATE TABLE T1(
-        |  c0 char(10) comment 'this is the first column, named ''c0''.',
+        |  c0 char(10) comment 'this is the first column',
         |  c1 varchar(10) comment 'this is the second column',
         |  c2 string,
         |  c3 BOOLEAN,
@@ -2511,13 +2511,13 @@ class TableEnvironmentTest {
         |  c23 ROW<f0 INT, f1 STRING>,
         |  c24 int not null comment 'this is c24 and part of pk',
         |  c25 varchar not null,
-        |  c26 row<f0 int not null, f1 int> not null comment 'this is c26 and part of pk, named ''c26''.',
+        |  c26 row<f0 int not null, f1 int> not null comment 'this is c26 and part of pk',
         |  c27 AS LOCALTIME,
         |  c28 AS CURRENT_TIME,
         |  c29 AS LOCALTIMESTAMP,
-        |  c30 AS CURRENT_TIMESTAMP comment 'notice: computed column, named ''c30''.',
+        |  c30 AS CURRENT_TIMESTAMP comment 'notice: computed column',
         |  c31 AS CURRENT_ROW_TIMESTAMP(),
-        |  ts AS to_timestamp(c25) comment 'notice: watermark, named ''ts''.',
+        |  ts AS to_timestamp(c25) comment 'notice: watermark',
         |  PRIMARY KEY(c24, c26) NOT ENFORCED,
         |  WATERMARK FOR ts AS ts - INTERVAL '1' SECOND
         |) with (
@@ -2528,14 +2528,7 @@ class TableEnvironmentTest {
     tableEnv.executeSql(sourceDDL)
 
     val expectedResult1 = util.Arrays.asList(
-      Row.of(
-        "c0",
-        "CHAR(10)",
-        Boolean.box(true),
-        null,
-        null,
-        null,
-        "this is the first column, named 'c0'."),
+      Row.of("c0", "CHAR(10)", Boolean.box(true), null, null, null, "this is the first column"),
       Row.of("c1", "VARCHAR(10)", Boolean.box(true), null, null, null, "this is the second column"),
       Row.of("c2", "STRING", Boolean.box(true), null, null, null, null),
       Row.of("c3", "BOOLEAN", Boolean.box(true), null, null, null, null),
@@ -2575,7 +2568,7 @@ class TableEnvironmentTest {
         "PRI(c24, c26)",
         null,
         null,
-        "this is c26 and part of pk, named 'c26'."),
+        "this is c26 and part of pk"),
       Row.of("c27", "TIME(0)", Boolean.box(false), null, "AS LOCALTIME", null, null),
       Row.of("c28", "TIME(0)", Boolean.box(false), null, "AS CURRENT_TIME", null, null),
       Row.of("c29", "TIMESTAMP(3)", Boolean.box(false), null, "AS LOCALTIMESTAMP", null, null),
@@ -2586,7 +2579,7 @@ class TableEnvironmentTest {
         null,
         "AS CURRENT_TIMESTAMP",
         null,
-        "notice: computed column, named 'c30'."),
+        "notice: computed column"),
       Row.of(
         "c31",
         "TIMESTAMP_LTZ(3)",
@@ -2602,7 +2595,7 @@ class TableEnvironmentTest {
         null,
         "AS TO_TIMESTAMP(`c25`)",
         "`ts` - INTERVAL '1' SECOND",
-        "notice: watermark, named 'ts'.")
+        "notice: watermark")
     )
     val tableResult1 = tableEnv.executeSql("describe T1")
     assertEquals(ResultKind.SUCCESS_WITH_CONTENT, tableResult1.getResultKind)
