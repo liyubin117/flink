@@ -21,7 +21,6 @@ package org.apache.flink.table.catalog;
 import org.apache.flink.annotation.Internal;
 import org.apache.flink.annotation.VisibleForTesting;
 import org.apache.flink.api.common.ExecutionConfig;
-import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.ReadableConfig;
 import org.apache.flink.table.api.CatalogNotExistException;
 import org.apache.flink.table.api.EnvironmentSettings;
@@ -55,7 +54,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -108,46 +106,31 @@ public final class CatalogManager implements CatalogRegistry, AutoCloseable {
 
     private CatalogManager(
             String defaultCatalogName,
-            Catalog defaultCatalog,
+            //            Catalog defaultCatalog,
             DataTypeFactory typeFactory,
             ManagedTableListener managedTableListener,
             List<CatalogModificationListener> catalogModificationListeners,
-            CatalogStoreHolder catalogStoreHolder) {
+            CatalogStoreHolder catalogStoreHolder,
+            CatalogDescriptor catalogDescriptor) {
         checkArgument(
                 !StringUtils.isNullOrWhitespaceOnly(defaultCatalogName),
                 "Default catalog name cannot be null or empty");
-        checkNotNull(defaultCatalog, "Default catalog cannot be null");
-
-        catalogs = new LinkedHashMap<>();
-        currentCatalogName = defaultCatalogName;
-        currentDatabaseName = defaultCatalog.getDefaultDatabase();
-
-        temporaryTables = new HashMap<>();
-        // right now the default catalog is always the built-in one
-        builtInCatalogName = defaultCatalogName;
 
         this.typeFactory = typeFactory;
         this.managedTableListener = managedTableListener;
         this.catalogModificationListeners = catalogModificationListeners;
-
         this.catalogStoreHolder = catalogStoreHolder;
 
-        createCatalog(
-                defaultCatalogName,
-                CatalogDescriptor.of(
-                        defaultCatalogName,
-                        Configuration.fromMap(
-                                Stream.of(
-                                                new AbstractMap.SimpleEntry<>(
-                                                        CommonCatalogOptions.CATALOG_TYPE.key(),
-                                                        GenericInMemoryCatalogFactoryOptions
-                                                                .IDENTIFIER),
-                                                new AbstractMap.SimpleEntry<>(
-                                                        CommonCatalogOptions.DEFAULT_DATABASE_KEY,
-                                                        currentDatabaseName))
-                                        .collect(
-                                                Collectors.toMap(
-                                                        Map.Entry::getKey, Map.Entry::getValue)))));
+        catalogs = new LinkedHashMap<>();
+        createCatalog(defaultCatalogName, catalogDescriptor);
+        Catalog defaultCatalog = catalogs.get(defaultCatalogName);
+        checkNotNull(defaultCatalog, "Default catalog cannot be null");
+
+        currentCatalogName = defaultCatalogName;
+        currentDatabaseName = defaultCatalog.getDefaultDatabase();
+        temporaryTables = new HashMap<>();
+        // right now the default catalog is always the built-in one
+        builtInCatalogName = defaultCatalogName;
     }
 
     @VisibleForTesting
@@ -179,6 +162,8 @@ public final class CatalogManager implements CatalogRegistry, AutoCloseable {
                 Collections.emptyList();
         private CatalogStoreHolder catalogStoreHolder;
 
+        private CatalogDescriptor catalogDescriptor;
+
         public Builder classLoader(ClassLoader classLoader) {
             this.classLoader = classLoader;
             return this;
@@ -189,9 +174,15 @@ public final class CatalogManager implements CatalogRegistry, AutoCloseable {
             return this;
         }
 
-        public Builder defaultCatalog(String defaultCatalogName, Catalog defaultCatalog) {
-            this.defaultCatalogName = defaultCatalogName;
-            this.defaultCatalog = defaultCatalog;
+        //        public Builder defaultCatalog(String defaultCatalogName, Catalog defaultCatalog) {
+        //            this.defaultCatalogName = defaultCatalogName;
+        //            this.defaultCatalog = defaultCatalog;
+        //            return this;
+        //        }
+
+        public Builder defaultCatalog(CatalogDescriptor catalogDescriptor) {
+            this.defaultCatalogName = catalogDescriptor.getCatalogName();
+            this.catalogDescriptor = catalogDescriptor;
             return this;
         }
 
@@ -222,13 +213,14 @@ public final class CatalogManager implements CatalogRegistry, AutoCloseable {
             checkNotNull(catalogStoreHolder, "CatalogStoreHolder cannot be null");
             return new CatalogManager(
                     defaultCatalogName,
-                    defaultCatalog,
+                    //                    defaultCatalog,
                     dataTypeFactory != null
                             ? dataTypeFactory
                             : new DataTypeFactoryImpl(classLoader, config, executionConfig),
                     new ManagedTableListener(classLoader, config),
                     catalogModificationListeners,
-                    catalogStoreHolder);
+                    catalogStoreHolder,
+                    catalogDescriptor);
         }
     }
 

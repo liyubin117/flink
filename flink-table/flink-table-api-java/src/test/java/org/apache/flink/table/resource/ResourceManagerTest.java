@@ -24,10 +24,10 @@ import org.apache.flink.core.fs.FileSystem;
 import org.apache.flink.core.fs.Path;
 import org.apache.flink.core.testutils.CommonTestUtils;
 import org.apache.flink.table.api.ValidationException;
+import org.apache.flink.table.catalog.CatalogDescriptor;
 import org.apache.flink.table.catalog.CatalogFunctionImpl;
 import org.apache.flink.table.catalog.FunctionCatalog;
 import org.apache.flink.table.catalog.FunctionLanguage;
-import org.apache.flink.table.catalog.GenericInMemoryCatalog;
 import org.apache.flink.table.catalog.UnresolvedIdentifier;
 import org.apache.flink.table.module.ModuleManager;
 import org.apache.flink.table.utils.CatalogManagerMocks;
@@ -378,8 +378,7 @@ public class ResourceManagerTest {
                         resourceManager,
                         CatalogManagerMocks.preparedCatalogManager()
                                 .defaultCatalog(
-                                        DEFAULT_CATALOG,
-                                        new GenericInMemoryCatalog(
+                                        CatalogDescriptor.ofMemoryCatalog(
                                                 DEFAULT_CATALOG, DEFAULT_DATABASE))
                                 .build(),
                         new ModuleManager());

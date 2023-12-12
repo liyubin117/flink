@@ -22,6 +22,7 @@ import org.apache.flink.api.common.ExecutionConfig;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.table.api.config.TableConfigOptions;
 import org.apache.flink.table.catalog.Catalog;
+import org.apache.flink.table.catalog.CatalogDescriptor;
 import org.apache.flink.table.catalog.CatalogManager;
 import org.apache.flink.table.catalog.CatalogStore;
 import org.apache.flink.table.catalog.CatalogStoreHolder;
@@ -65,7 +66,7 @@ public final class CatalogManagerMocks {
             @Nullable Catalog catalog, @Nullable CatalogStoreHolder catalogStoreHolder) {
         final CatalogManager.Builder builder = preparedCatalogManager();
         if (catalog != null) {
-            builder.defaultCatalog(DEFAULT_CATALOG, catalog);
+            builder.defaultCatalog(CatalogDescriptor.ofMemoryCatalog(DEFAULT_CATALOG));
         }
         if (catalogStoreHolder != null) {
             builder.catalogStoreHolder(catalogStoreHolder);
@@ -79,7 +80,8 @@ public final class CatalogManagerMocks {
         return CatalogManager.newBuilder()
                 .classLoader(CatalogManagerMocks.class.getClassLoader())
                 .config(new Configuration())
-                .defaultCatalog(DEFAULT_CATALOG, createEmptyCatalog())
+                .defaultCatalog(
+                        CatalogDescriptor.ofMemoryCatalog(DEFAULT_CATALOG, DEFAULT_DATABASE))
                 .catalogStoreHolder(
                         CatalogStoreHolder.newBuilder()
                                 .classloader(CatalogManagerMocks.class.getClassLoader())

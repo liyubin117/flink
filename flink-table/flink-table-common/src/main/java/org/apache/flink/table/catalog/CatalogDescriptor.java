@@ -21,6 +21,11 @@ package org.apache.flink.table.catalog;
 import org.apache.flink.annotation.PublicEvolving;
 import org.apache.flink.configuration.Configuration;
 
+import java.util.AbstractMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 /**
  * Describes a {@link Catalog} with the catalog name and configuration.
  *
@@ -61,5 +66,36 @@ public class CatalogDescriptor {
      */
     public static CatalogDescriptor of(String catalogName, Configuration configuration) {
         return new CatalogDescriptor(catalogName, configuration);
+    }
+
+    public static CatalogDescriptor ofMemoryCatalog(
+            String catalogName, String defaultDatabaseName) {
+        return CatalogDescriptor.of(
+                catalogName,
+                Configuration.fromMap(
+                        Stream.of(
+                                        new AbstractMap.SimpleEntry<>(
+                                                CommonCatalogOptions.CATALOG_TYPE.key(),
+                                                "generic_in_memory"),
+                                        new AbstractMap.SimpleEntry<>(
+                                                CommonCatalogOptions.DEFAULT_DATABASE_KEY,
+                                                defaultDatabaseName))
+                                .collect(
+                                        Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))));
+    }
+
+    public static CatalogDescriptor ofMemoryCatalog(String catalogName) {
+        return CatalogDescriptor.of(
+                catalogName,
+                Configuration.fromMap(
+                        Stream.of(
+                                        new AbstractMap.SimpleEntry<>(
+                                                CommonCatalogOptions.CATALOG_TYPE.key(),
+                                                "generic_in_memory"),
+                                        new AbstractMap.SimpleEntry<>(
+                                                CommonCatalogOptions.DEFAULT_DATABASE_KEY,
+                                                "default"))
+                                .collect(
+                                        Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))));
     }
 }

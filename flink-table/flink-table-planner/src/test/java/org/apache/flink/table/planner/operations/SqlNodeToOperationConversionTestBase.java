@@ -26,6 +26,7 @@ import org.apache.flink.table.api.Schema;
 import org.apache.flink.table.api.SqlDialect;
 import org.apache.flink.table.api.TableConfig;
 import org.apache.flink.table.catalog.Catalog;
+import org.apache.flink.table.catalog.CatalogDescriptor;
 import org.apache.flink.table.catalog.CatalogManager;
 import org.apache.flink.table.catalog.CatalogTable;
 import org.apache.flink.table.catalog.Column;
@@ -65,7 +66,7 @@ public class SqlNodeToOperationConversionTestBase {
     protected final Catalog catalog = new GenericInMemoryCatalog("MockCatalog", "default");
     protected final CatalogManager catalogManager =
             CatalogManagerMocks.preparedCatalogManager()
-                    .defaultCatalog("builtin", catalog)
+                    .defaultCatalog(CatalogDescriptor.ofMemoryCatalog("builtin", "default"))
                     .config(
                             Configuration.fromMap(
                                     Collections.singletonMap(

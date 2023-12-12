@@ -94,7 +94,9 @@ class FunctionCatalogTest {
                                 FunctionCatalogTest.class.getClassLoader(),
                                 configuration),
                         CatalogManagerMocks.preparedCatalogManager()
-                                .defaultCatalog(DEFAULT_CATALOG, catalog)
+                                .defaultCatalog(
+                                        CatalogDescriptor.ofMemoryCatalog(
+                                                DEFAULT_CATALOG, DEFAULT_DATABASE))
                                 .build(),
                         moduleManager);
     }

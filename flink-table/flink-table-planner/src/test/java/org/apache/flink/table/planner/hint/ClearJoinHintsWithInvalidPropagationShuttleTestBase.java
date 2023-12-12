@@ -22,6 +22,7 @@ import org.apache.flink.api.common.RuntimeExecutionMode;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.ExecutionOptions;
 import org.apache.flink.table.catalog.Catalog;
+import org.apache.flink.table.catalog.CatalogDescriptor;
 import org.apache.flink.table.catalog.CatalogManager;
 import org.apache.flink.table.catalog.GenericInMemoryCatalog;
 import org.apache.flink.table.planner.calcite.FlinkRelBuilder;
@@ -50,7 +51,7 @@ abstract class ClearJoinHintsWithInvalidPropagationShuttleTestBase extends Table
     private final Catalog catalog = new GenericInMemoryCatalog("MockCatalog", "default");
     private final CatalogManager catalogManager =
             CatalogManagerMocks.preparedCatalogManager()
-                    .defaultCatalog("builtin", catalog)
+                    .defaultCatalog(CatalogDescriptor.ofMemoryCatalog("builtin", "default"))
                     .config(
                             Configuration.fromMap(
                                     Collections.singletonMap(

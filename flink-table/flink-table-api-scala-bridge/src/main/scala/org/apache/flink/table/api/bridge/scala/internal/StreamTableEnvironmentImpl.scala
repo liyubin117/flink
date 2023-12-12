@@ -322,9 +322,8 @@ object StreamTableEnvironmentImpl {
     val catalogManager = CatalogManager.newBuilder
       .classLoader(userClassLoader)
       .config(tableConfig)
-      .defaultCatalog(
-        settings.getBuiltInCatalogName,
-        new GenericInMemoryCatalog(settings.getBuiltInCatalogName, settings.getBuiltInDatabaseName))
+      .defaultCatalog(CatalogDescriptor
+        .ofMemoryCatalog(settings.getBuiltInCatalogName, settings.getBuiltInDatabaseName))
       .executionConfig(executionEnvironment.getConfig)
       .catalogModificationListeners(TableFactoryUtil
         .findCatalogModificationListenerList(tableConfig.getConfiguration, userClassLoader))

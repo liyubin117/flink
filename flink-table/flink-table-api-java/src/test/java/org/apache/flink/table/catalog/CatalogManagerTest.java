@@ -260,7 +260,7 @@ class CatalogManagerTest {
                 CatalogManager.newBuilder()
                         .classLoader(CatalogManagerTest.class.getClassLoader())
                         .config(new Configuration())
-                        .defaultCatalog("default", new GenericInMemoryCatalog("default"))
+                        .defaultCatalog(CatalogDescriptor.ofMemoryCatalog("default"))
                         .catalogStoreHolder(
                                 CatalogStoreHolder.newBuilder()
                                         .catalogStore(new GenericInMemoryCatalogStore())

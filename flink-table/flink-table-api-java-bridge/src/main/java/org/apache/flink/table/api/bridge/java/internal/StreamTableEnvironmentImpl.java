@@ -32,12 +32,12 @@ import org.apache.flink.table.api.TableConfig;
 import org.apache.flink.table.api.bridge.internal.AbstractStreamTableEnvironmentImpl;
 import org.apache.flink.table.api.bridge.java.StreamStatementSet;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
+import org.apache.flink.table.catalog.CatalogDescriptor;
 import org.apache.flink.table.catalog.CatalogManager;
 import org.apache.flink.table.catalog.CatalogStore;
 import org.apache.flink.table.catalog.CatalogStoreHolder;
 import org.apache.flink.table.catalog.DataTypeFactory;
 import org.apache.flink.table.catalog.FunctionCatalog;
-import org.apache.flink.table.catalog.GenericInMemoryCatalog;
 import org.apache.flink.table.catalog.ResolvedSchema;
 import org.apache.flink.table.catalog.SchemaResolver;
 import org.apache.flink.table.catalog.SchemaTranslator;
@@ -134,8 +134,7 @@ public final class StreamTableEnvironmentImpl extends AbstractStreamTableEnviron
                         .classLoader(userClassLoader)
                         .config(tableConfig)
                         .defaultCatalog(
-                                settings.getBuiltInCatalogName(),
-                                new GenericInMemoryCatalog(
+                                CatalogDescriptor.ofMemoryCatalog(
                                         settings.getBuiltInCatalogName(),
                                         settings.getBuiltInDatabaseName()))
                         .executionConfig(executionEnvironment.getConfig())

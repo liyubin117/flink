@@ -26,6 +26,7 @@ import org.apache.flink.table.api.ValidationException;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.apache.flink.table.catalog.Catalog;
 import org.apache.flink.table.catalog.CatalogDatabaseImpl;
+import org.apache.flink.table.catalog.CatalogDescriptor;
 import org.apache.flink.table.catalog.CatalogManager;
 import org.apache.flink.table.catalog.CatalogTable;
 import org.apache.flink.table.catalog.GenericInMemoryCatalog;
@@ -200,7 +201,9 @@ class CatalogITCase {
         final Catalog c2 = new GenericInMemoryCatalog("c2", "d2");
 
         final CatalogManager catalogManager =
-                CatalogManagerMocks.preparedCatalogManager().defaultCatalog("c2", c2).build();
+                CatalogManagerMocks.preparedCatalogManager()
+                        .defaultCatalog(CatalogDescriptor.ofMemoryCatalog("c2", "d2"))
+                        .build();
         catalogManager.registerCatalog("c1", c1);
 
         final CatalogTable catalogTable =
