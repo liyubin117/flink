@@ -21,6 +21,7 @@ package org.apache.flink.table.catalog;
 import org.apache.flink.annotation.Internal;
 import org.apache.flink.annotation.VisibleForTesting;
 import org.apache.flink.api.common.ExecutionConfig;
+import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.ReadableConfig;
 import org.apache.flink.table.api.CatalogNotExistException;
 import org.apache.flink.table.api.EnvironmentSettings;
@@ -54,6 +55,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -117,7 +119,6 @@ public final class CatalogManager implements CatalogRegistry, AutoCloseable {
         checkNotNull(defaultCatalog, "Default catalog cannot be null");
 
         catalogs = new LinkedHashMap<>();
-        catalogs.put(defaultCatalogName, defaultCatalog);
         currentCatalogName = defaultCatalogName;
         currentDatabaseName = defaultCatalog.getDefaultDatabase();
 
@@ -130,6 +131,23 @@ public final class CatalogManager implements CatalogRegistry, AutoCloseable {
         this.catalogModificationListeners = catalogModificationListeners;
 
         this.catalogStoreHolder = catalogStoreHolder;
+
+        createCatalog(
+                defaultCatalogName,
+                CatalogDescriptor.of(
+                        defaultCatalogName,
+                        Configuration.fromMap(
+                                Stream.of(
+                                                new AbstractMap.SimpleEntry<>(
+                                                        CommonCatalogOptions.CATALOG_TYPE.key(),
+                                                        GenericInMemoryCatalogFactoryOptions
+                                                                .IDENTIFIER),
+                                                new AbstractMap.SimpleEntry<>(
+                                                        CommonCatalogOptions.DEFAULT_DATABASE_KEY,
+                                                        currentDatabaseName))
+                                        .collect(
+                                                Collectors.toMap(
+                                                        Map.Entry::getKey, Map.Entry::getValue)))));
     }
 
     @VisibleForTesting
