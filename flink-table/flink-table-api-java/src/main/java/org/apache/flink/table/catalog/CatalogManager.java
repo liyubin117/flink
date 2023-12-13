@@ -106,7 +106,7 @@ public final class CatalogManager implements CatalogRegistry, AutoCloseable {
 
     private CatalogManager(
             String defaultCatalogName,
-            //            Catalog defaultCatalog,
+            Catalog defaultCatalog,
             DataTypeFactory typeFactory,
             ManagedTableListener managedTableListener,
             List<CatalogModificationListener> catalogModificationListeners,
@@ -120,14 +120,20 @@ public final class CatalogManager implements CatalogRegistry, AutoCloseable {
         this.managedTableListener = managedTableListener;
         this.catalogModificationListeners = catalogModificationListeners;
         this.catalogStoreHolder = catalogStoreHolder;
+        this.catalogs = new LinkedHashMap<>();
 
-        catalogs = new LinkedHashMap<>();
-        createCatalog(defaultCatalogName, catalogDescriptor);
-        Catalog defaultCatalog = catalogs.get(defaultCatalogName);
-        checkNotNull(defaultCatalog, "Default catalog cannot be null");
+        Catalog catalog;
+        if (catalogDescriptor != null) {
+            createCatalog(defaultCatalogName, catalogDescriptor);
+            catalog = catalogs.get(defaultCatalogName);
+        } else {
+            catalogs.put(defaultCatalogName, defaultCatalog);
+            catalog = defaultCatalog;
+        }
+        checkNotNull(catalog, "Default catalog cannot be null");
 
         currentCatalogName = defaultCatalogName;
-        currentDatabaseName = defaultCatalog.getDefaultDatabase();
+        currentDatabaseName = catalog.getDefaultDatabase();
         temporaryTables = new HashMap<>();
         // right now the default catalog is always the built-in one
         builtInCatalogName = defaultCatalogName;
@@ -174,11 +180,11 @@ public final class CatalogManager implements CatalogRegistry, AutoCloseable {
             return this;
         }
 
-        //        public Builder defaultCatalog(String defaultCatalogName, Catalog defaultCatalog) {
-        //            this.defaultCatalogName = defaultCatalogName;
-        //            this.defaultCatalog = defaultCatalog;
-        //            return this;
-        //        }
+        public Builder defaultCatalog(String defaultCatalogName, Catalog defaultCatalog) {
+            this.defaultCatalogName = defaultCatalogName;
+            this.defaultCatalog = defaultCatalog;
+            return this;
+        }
 
         public Builder defaultCatalog(CatalogDescriptor catalogDescriptor) {
             this.defaultCatalogName = catalogDescriptor.getCatalogName();
@@ -213,7 +219,7 @@ public final class CatalogManager implements CatalogRegistry, AutoCloseable {
             checkNotNull(catalogStoreHolder, "CatalogStoreHolder cannot be null");
             return new CatalogManager(
                     defaultCatalogName,
-                    //                    defaultCatalog,
+                    defaultCatalog,
                     dataTypeFactory != null
                             ? dataTypeFactory
                             : new DataTypeFactoryImpl(classLoader, config, executionConfig),
