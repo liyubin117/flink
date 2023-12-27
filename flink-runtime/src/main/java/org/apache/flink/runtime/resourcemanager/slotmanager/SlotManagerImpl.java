@@ -296,7 +296,7 @@ public class SlotManagerImpl implements SlotManager {
         resourceActions = Preconditions.checkNotNull(newResourceActions);
 
         started = true;
-
+        //@mark: 第一个定时任务，SlotManager每隔resourcemanager.taskmanager-timeout 30s检查tm空闲是否超过30s，超时则释放
         taskManagerTimeoutsAndRedundancyCheck =
                 scheduledExecutor.scheduleWithFixedDelay(
                         () ->
@@ -305,7 +305,7 @@ public class SlotManagerImpl implements SlotManager {
                         0L,
                         taskManagerTimeout.toMilliseconds(),
                         TimeUnit.MILLISECONDS);
-
+        //@mark: 第二个定时任务，SlotManager每隔slot.request.timeout 5分钟检查SlotRequest是否超时5分钟，超时则释放
         slotRequestTimeoutCheck =
                 scheduledExecutor.scheduleWithFixedDelay(
                         () -> mainThreadExecutor.execute(() -> checkSlotRequestTimeouts()),

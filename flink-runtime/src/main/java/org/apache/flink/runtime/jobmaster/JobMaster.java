@@ -375,6 +375,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
      */
     public CompletableFuture<Acknowledge> start(final JobMasterId newJobMasterId) throws Exception {
         // make sure we receive RPC and async calls
+        //@mark: 调用JobMaster rpcServer start启动rpc服务
         start();
 
         return callAsyncWithoutFencing(
@@ -868,7 +869,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
 
     // -- job starting and stopping
     // -----------------------------------------------------------------
-
+    //@mark: 开始任务运行
     private Acknowledge startJobExecution(JobMasterId newJobMasterId) throws Exception {
 
         validateRunsInMainThread();
@@ -897,6 +898,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
     }
 
     private void startJobMasterServices() throws Exception {
+        //启动对rm、tm的心跳服务
         startHeartbeatServices();
 
         // start the slot pool make sure the slot pool now accepts messages for this leader
@@ -1036,12 +1038,13 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
                             .getTerminationFuture()
                             .handle(
                                     (ignored, throwable) -> {
+                                        //@mark: 为该任务分配Scheduler
                                         newScheduler.setMainThreadExecutor(getMainThreadExecutor());
                                         assignScheduler(newScheduler, newJobManagerJobMetricGroup);
                                         return null;
                                     });
         }
-
+        //@mark: 执行任务调度
         FutureUtils.assertNoException(schedulerAssignedFuture.thenRun(this::startScheduling));
     }
 
@@ -1437,6 +1440,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
         }
     }
 
+    //@mark: 监听来自rm的心跳
     private class ResourceManagerHeartbeatListener implements HeartbeatListener<Void, Void> {
 
         @Override

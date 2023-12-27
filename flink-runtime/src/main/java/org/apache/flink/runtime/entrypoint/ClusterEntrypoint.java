@@ -221,6 +221,7 @@ public abstract class ClusterEntrypoint implements AutoCloseableAsync, FatalErro
     private void runCluster(Configuration configuration, PluginManager pluginManager)
             throws Exception {
         synchronized (lock) {
+            //@mark: 初始化集群组件必要的前置服务
             initializeServices(configuration, pluginManager);
 
             // write host information into configuration

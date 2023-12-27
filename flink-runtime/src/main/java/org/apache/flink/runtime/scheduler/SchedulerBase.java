@@ -618,7 +618,9 @@ public abstract class SchedulerBase implements SchedulerNG, CheckpointScheduling
     public final void startScheduling() {
         mainThreadExecutor.assertRunningInMainThread();
         registerJobMetrics();
+        //@mark: 启动所有的coordinator算子
         startAllOperatorCoordinators();
+        //@mark: executionGraph从created转到running状态后，根据不同的SchedulingStrategy策略进行调度执行
         startSchedulingInternal();
     }
 

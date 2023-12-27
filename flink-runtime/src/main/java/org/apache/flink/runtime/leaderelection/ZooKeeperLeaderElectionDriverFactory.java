@@ -44,6 +44,7 @@ public class ZooKeeperLeaderElectionDriverFactory implements LeaderElectionDrive
             FatalErrorHandler fatalErrorHandler,
             String leaderContenderDescription)
             throws Exception {
+        //@mark: zk高可用服务的选举驱动器，基于curator框架
         return new ZooKeeperLeaderElectionDriver(
                 client,
                 latchPath,

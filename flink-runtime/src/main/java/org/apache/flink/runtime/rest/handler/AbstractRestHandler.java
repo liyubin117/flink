@@ -112,6 +112,7 @@ public abstract class AbstractRestHandler<
      * @return future containing a handler response
      * @throws RestHandlerException if the handling failed
      */
+    //@mark: 所有的handler是基于netty的，处理请求的逻辑在此处实现
     protected abstract CompletableFuture<P> handleRequest(
             @Nonnull HandlerRequest<R, M> request, @Nonnull T gateway) throws RestHandlerException;
 }

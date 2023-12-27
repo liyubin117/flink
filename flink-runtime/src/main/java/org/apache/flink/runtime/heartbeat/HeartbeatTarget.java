@@ -37,6 +37,7 @@ public interface HeartbeatTarget<I> {
      * @param heartbeatOrigin Resource ID identifying the machine for which a heartbeat shall be
      *     reported.
      * @param heartbeatPayload Payload of the heartbeat. Null indicates an empty payload.
+     * @mark: 向目标发送心跳，对目标端来说是接收。heartbeatOrigin是发送端的resourceID
      */
     void receiveHeartbeat(ResourceID heartbeatOrigin, I heartbeatPayload);
 
@@ -46,6 +47,7 @@ public interface HeartbeatTarget<I> {
      *
      * @param requestOrigin Resource ID identifying the machine issuing the heartbeat request.
      * @param heartbeatPayload Payload of the heartbeat request. Null indicates an empty payload.
+     * @mark: 向目标请求心跳，对目标端来说是发送。requestOrigin是目标端的resourceID
      */
     void requestHeartbeat(ResourceID requestOrigin, I heartbeatPayload);
 }

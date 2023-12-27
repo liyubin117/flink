@@ -113,6 +113,7 @@ public class ZooKeeperLeaderElectionDriver
 
         running = true;
 
+        //@mark: 将driver注册为监听器并启动
         leaderLatch.addListener(this);
         leaderLatch.start();
 
@@ -163,6 +164,7 @@ public class ZooKeeperLeaderElectionDriver
 
     @Override
     public void isLeader() {
+        //@mark 赋予leader
         leaderElectionEventHandler.onGrantLeadership();
     }
 

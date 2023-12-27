@@ -36,7 +36,7 @@ final class DispatcherRunnerLeaderElectionLifecycleManager<
             T dispatcherRunner, LeaderElectionService leaderElectionService) throws Exception {
         this.dispatcherRunner = dispatcherRunner;
         this.leaderElectionService = leaderElectionService;
-
+        //@mark: 选举后启动Dispatcher，调用DefaultDispatcherRunner#grantLeadership
         leaderElectionService.start(dispatcherRunner);
     }
 

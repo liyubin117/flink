@@ -118,6 +118,7 @@ public class StandaloneResourceManager extends ResourceManager<ResourceID> {
 
         final long startupPeriodMillis = startupPeriodTime.toMilliseconds();
 
+        //@mark: 在standalone模式下，当配置resourcemanager.standalone.start-up-time后，会在这里启动一个延迟任务，作用是在此时间内，不会拒绝任何slot请求
         if (startupPeriodMillis > 0) {
             scheduleRunAsync(
                     () -> setFailUnfulfillableRequest(true),

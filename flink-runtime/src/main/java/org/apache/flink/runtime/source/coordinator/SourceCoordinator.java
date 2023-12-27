@@ -107,6 +107,7 @@ public class SourceCoordinator<SplitT extends SourceSplit, EnumChkT>
         this.context = context;
     }
 
+    //@mark: 使用单线程执行source分区获取和变更处理
     @Override
     public void start() throws Exception {
         LOG.info("Starting split enumerator for source {}.", operatorName);

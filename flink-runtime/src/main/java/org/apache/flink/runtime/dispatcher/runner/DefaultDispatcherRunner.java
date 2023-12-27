@@ -106,6 +106,7 @@ public final class DefaultDispatcherRunner implements DispatcherRunner, LeaderCo
     }
 
     private void startNewDispatcherLeaderProcess(UUID leaderSessionID) {
+        //@mark: Dispatcher组件启动逻辑主要在这
         stopDispatcherLeaderProcess();
 
         dispatcherLeaderProcess = createNewDispatcherLeaderProcess(leaderSessionID);

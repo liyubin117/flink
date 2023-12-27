@@ -55,6 +55,7 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  * The runner for the job manager. It deals with job level leader election and make underlying job
  * manager properly reacted.
  */
+//@mark: 负责处理job级别的leader选举，以及使相应的job manager做出适当的反应。
 public class JobManagerRunnerImpl
         implements LeaderContender, OnCompletionActions, JobManagerRunner {
 
@@ -306,9 +307,11 @@ public class JobManagerRunnerImpl
                         }
 
                         leadershipOperation =
+                                //@mark: 先完成leader选举
                                 leadershipOperation.thenCompose(
                                         (ignored) -> {
                                             synchronized (lock) {
+                                                //@mark: 然后启动JobMaster
                                                 return verifyJobSchedulingStatusAndStartJobManager(
                                                         leaderSessionID);
                                             }
@@ -334,6 +337,7 @@ public class JobManagerRunnerImpl
                 });
     }
 
+    //@mark: 为该任务启动一个JobMaster，在此之前要先完成leader选举
     private CompletionStage<Void> startJobMaster(UUID leaderSessionId) {
         log.info(
                 "JobManager runner for job {} ({}) was granted leadership with session id {} at {}.",

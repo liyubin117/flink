@@ -207,6 +207,7 @@ public abstract class Dispatcher extends PermanentlyFencedRpcEndpoint<Dispatcher
     @Override
     public void onStart() throws Exception {
         try {
+            //@mark: 启动Dispatcher服务，注册metric
             startDispatcherServices();
         } catch (Throwable t) {
             final DispatcherException exception =
@@ -215,7 +216,7 @@ public abstract class Dispatcher extends PermanentlyFencedRpcEndpoint<Dispatcher
             onFatalError(exception);
             throw exception;
         }
-
+        //@mark: 恢复执行待恢复的任务
         startRecoveredJobs();
         this.dispatcherBootstrap =
                 this.dispatcherBootstrapFactory.create(
@@ -297,6 +298,7 @@ public abstract class Dispatcher extends PermanentlyFencedRpcEndpoint<Dispatcher
     // RPCs
     // ------------------------------------------------------
 
+    //@mark: 处理提交任务
     @Override
     public CompletableFuture<Acknowledge> submitJob(JobGraph jobGraph, Time timeout) {
         log.info("Received JobGraph submission {} ({}).", jobGraph.getJobID(), jobGraph.getName());
@@ -389,14 +391,17 @@ public abstract class Dispatcher extends PermanentlyFencedRpcEndpoint<Dispatcher
                 ioExecutor);
     }
 
+    //@mark: 持久化JobGraph并运行
     private void persistAndRunJob(JobGraph jobGraph) throws Exception {
         jobGraphWriter.putJobGraph(jobGraph);
         runJob(jobGraph, ExecutionType.SUBMISSION);
     }
 
+    //@mark: 可执行恢复、提交两种任务
     private void runJob(JobGraph jobGraph, ExecutionType executionType) {
         Preconditions.checkState(!runningJobs.containsKey(jobGraph.getJobID()));
         long initializationTimestamp = System.currentTimeMillis();
+        //@mark: 创建JobManagerRunner实例，用于执行一个JobMaster
         CompletableFuture<JobManagerRunner> jobManagerRunnerFuture =
                 createJobManagerRunner(jobGraph, initializationTimestamp);
 

@@ -2267,6 +2267,7 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
 
         @Override
         public void reportPayload(ResourceID resourceID, AllocatedSlotReport allocatedSlotReport) {
+            //@mark: tm接收到rm的心跳后，处理相关负载，将 TaskExecutor 在其分配的插槽上的视图与 JobMaster 的视图同步
             validateRunsInMainThread();
             OptionalConsumer.of(jobTable.getConnection(allocatedSlotReport.getJobId()))
                     .ifPresent(

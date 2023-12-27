@@ -39,6 +39,7 @@ public class StandaloneSessionClusterEntrypoint extends SessionClusterEntrypoint
                 StandaloneResourceManagerFactory.getInstance());
     }
 
+    //@mark: standalone session 模式入口
     public static void main(String[] args) {
         // startup checks and logging
         EnvironmentInformation.logEnvironmentInfo(

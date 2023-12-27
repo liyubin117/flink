@@ -348,7 +348,7 @@ public class DefaultScheduler extends SchedulerBase implements SchedulerOperatio
     // ------------------------------------------------------------------------
     // SchedulerOperations
     // ------------------------------------------------------------------------
-
+    //@mark: 分配slot资源并部署运行
     @Override
     public void allocateSlotsAndDeploy(
             final List<ExecutionVertexDeploymentOption> executionVertexDeploymentOptions) {

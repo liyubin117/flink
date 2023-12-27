@@ -68,6 +68,7 @@ public abstract class LeaderRetrievalHandler<T extends RestfulGateway>
     }
 
     @Override
+    //@mark: channelRead0被netty自动调用
     protected void channelRead0(
             ChannelHandlerContext channelHandlerContext, RoutedRequest routedRequest) {
 

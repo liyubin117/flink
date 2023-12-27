@@ -108,18 +108,20 @@ public final class JobSubmitHandler
                     HttpResponseStatus.BAD_REQUEST);
         }
 
+        //@mark: 从请求中获取JobGraph文件，反序列化为JobGraph对象
         CompletableFuture<JobGraph> jobGraphFuture = loadJobGraph(requestBody, nameToFile);
-
+        //@mark: 从请求中获取Jar文件
         Collection<Path> jarFiles = getJarFilesToUpload(requestBody.jarFileNames, nameToFile);
-
+        //@mark: 从请求中获取依赖文件
         Collection<Tuple2<String, Path>> artifacts =
                 getArtifactFilesToUpload(requestBody.artifactFileNames, nameToFile);
-
+        //@mark: 上传以上文件到BlobServer
         CompletableFuture<JobGraph> finalizedJobGraphFuture =
                 uploadJobGraphFiles(gateway, jobGraphFuture, jarFiles, artifacts, configuration);
 
         CompletableFuture<Acknowledge> jobSubmissionFuture =
                 finalizedJobGraphFuture.thenCompose(
+                        //@mark: 调用Dispatcher rpc的submitJob方法
                         jobGraph -> gateway.submitJob(jobGraph, timeout));
 
         return jobSubmissionFuture.thenCombine(

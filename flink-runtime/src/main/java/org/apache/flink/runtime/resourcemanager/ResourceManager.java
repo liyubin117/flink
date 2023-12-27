@@ -228,6 +228,7 @@ public abstract class ResourceManager<WorkerType extends ResourceIDRetrievable>
     @Override
     public final void onStart() throws Exception {
         try {
+            //@mark: 启动rm服务
             startResourceManagerServices();
         } catch (Throwable t) {
             final ResourceManagerException exception =
@@ -241,14 +242,17 @@ public abstract class ResourceManager<WorkerType extends ResourceIDRetrievable>
 
     private void startResourceManagerServices() throws Exception {
         try {
+            //@mark: 生成leader选举服务，常用ZooKeeperHaServices#getResourceManagerLeaderElectionService生成DefaultLeaderElectionService
             leaderElectionService =
                     highAvailabilityServices.getResourceManagerLeaderElectionService();
 
             initialize();
 
+            //@mark: 启动leader选举服务，调用LeaderContender#grantLeadership()，本方法的LeaderContender是ResourceManager
             leaderElectionService.start(this);
             jobLeaderIdService.start(new JobLeaderIdActionsImpl());
 
+            //@mark: 注册tm的metric
             registerTaskExecutorMetrics();
         } catch (Exception e) {
             handleStartResourceManagerServicesException(e);
@@ -963,17 +967,20 @@ public abstract class ResourceManager<WorkerType extends ResourceIDRetrievable>
                     taskExecutorAddress);
             taskExecutors.put(taskExecutorResourceId, registration);
 
+            //@mark: 向rm注册tm成功后，将tm节点也注册成心跳监听对象
             taskManagerHeartbeatManager.monitorTarget(
                     taskExecutorResourceId,
                     new HeartbeatTarget<Void>() {
                         @Override
                         public void receiveHeartbeat(ResourceID resourceID, Void payload) {
+                            //@mark: 接收来自rm的心跳
                             // the ResourceManager will always send heartbeat requests to the
                             // TaskManager
                         }
 
                         @Override
                         public void requestHeartbeat(ResourceID resourceID, Void payload) {
+                            //@mark: 接收到rm请求tm的心跳后，调用TaskExecutor#heartbeatFromResourceManager向rm发送心跳
                             taskExecutorGateway.heartbeatFromResourceManager(resourceID);
                         }
                     });
@@ -1160,8 +1167,11 @@ public abstract class ResourceManager<WorkerType extends ResourceIDRetrievable>
      */
     @Override
     public void grantLeadership(final UUID newLeaderSessionID) {
+        //@mark: 此rm被选举为leader后调用
+
         final CompletableFuture<Boolean> acceptLeadershipFuture =
                 clearStateFuture.thenComposeAsync(
+                        //@mark: 尝试获取leader权限
                         (ignored) -> tryAcceptLeadership(newLeaderSessionID),
                         getUnfencedMainThreadExecutor());
 
@@ -1185,6 +1195,7 @@ public abstract class ResourceManager<WorkerType extends ResourceIDRetrievable>
     }
 
     private CompletableFuture<Boolean> tryAcceptLeadership(final UUID newLeaderSessionID) {
+        //@mark: 先由选举服务确认是否有leader权限
         if (leaderElectionService.hasLeadership(newLeaderSessionID)) {
             final ResourceManagerId newResourceManagerId =
                     ResourceManagerId.fromUuid(newLeaderSessionID);
@@ -1200,7 +1211,7 @@ public abstract class ResourceManager<WorkerType extends ResourceIDRetrievable>
             }
 
             setFencingToken(newResourceManagerId);
-
+            //@mark: 在此leader节点上启动rm
             startServicesOnLeadership();
 
             return prepareLeadershipAsync().thenApply(ignored -> true);
@@ -1210,8 +1221,9 @@ public abstract class ResourceManager<WorkerType extends ResourceIDRetrievable>
     }
 
     private void startServicesOnLeadership() {
+        //@mark: 启动jm tm心跳服务，由rm向jm tm发送心跳。默认间隔10s，超时50s
         startHeartbeatServices();
-
+        //@mark: 启动SlotManager资源管理服务
         slotManager.start(getFencingToken(), getMainThreadExecutor(), new ResourceActionsImpl());
 
         onLeadership();
@@ -1241,13 +1253,15 @@ public abstract class ResourceManager<WorkerType extends ResourceIDRetrievable>
     }
 
     private void startHeartbeatServices() {
+        //@mark: 生成的HeartbeatManagerSenderImpl是线程，实际是执行其中的run方法
+        //@mark: tm是监控目标，向监控目标发送心跳，启动rm向tm发送的心跳
         taskManagerHeartbeatManager =
                 heartbeatServices.createHeartbeatManagerSender(
                         resourceId,
                         new TaskManagerHeartbeatListener(),
                         getMainThreadExecutor(),
                         log);
-
+        //@mark: 启动向jm发送的心跳
         jobManagerHeartbeatManager =
                 heartbeatServices.createHeartbeatManagerSender(
                         resourceId,

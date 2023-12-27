@@ -118,6 +118,8 @@ public class DefaultDispatcherResourceManagerComponentFactory
         DispatcherRunner dispatcherRunner = null;
 
         try {
+            //@mark: 创建JobManager组件
+
             dispatcherLeaderRetrievalService =
                     highAvailabilityServices.getDispatcherLeaderRetriever();
 
@@ -156,7 +158,7 @@ public class DefaultDispatcherResourceManagerComponentFactory
                                     metricQueryServiceRetriever,
                                     dispatcherGatewayRetriever,
                                     executor);
-
+            //@mark: 创建WebMonitorEndpoint组件
             webMonitorEndpoint =
                     restEndpointFactory.createRestEndpoint(
                             configuration,
@@ -169,6 +171,7 @@ public class DefaultDispatcherResourceManagerComponentFactory
                             fatalErrorHandler);
 
             log.debug("Starting Dispatcher REST endpoint.");
+            //@mark: 启动WebMonitorEndpoint组件
             webMonitorEndpoint.start();
 
             final String hostname = RpcUtils.getHostname(rpcService);
@@ -208,6 +211,7 @@ public class DefaultDispatcherResourceManagerComponentFactory
                             ioExecutor);
 
             log.debug("Starting Dispatcher.");
+            //@mark: 启动Dispatcher组件
             dispatcherRunner =
                     dispatcherRunnerFactory.createDispatcherRunner(
                             highAvailabilityServices.getDispatcherLeaderElectionService(),
@@ -218,6 +222,7 @@ public class DefaultDispatcherResourceManagerComponentFactory
                             partialDispatcherServices);
 
             log.debug("Starting ResourceManager.");
+            //@mark: 启动ResourceManager组件，此组件是一个RpcEndpoint，调用RpcServer#start向自身发送START消息来启动
             resourceManager.start();
 
             resourceManagerRetrievalService.start(resourceManagerGatewayRetriever);

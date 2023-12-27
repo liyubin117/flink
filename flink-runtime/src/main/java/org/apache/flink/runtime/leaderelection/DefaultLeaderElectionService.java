@@ -37,6 +37,7 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  * Default implementation for leader election service. Composed with different {@link
  * LeaderElectionDriver}, we could perform a leader election for the contender, and then persist the
  * leader information to various storage.
+ * @mark: 一个DefaultLeaderElectionService可以使用不同的LeaderElectionDriver实现选举leader，然后将leader信息持久化到不同的存储中。driver的isLeader、notLeader分别判断是否是leader
  */
 public class DefaultLeaderElectionService
         implements LeaderElectionService, LeaderElectionEventHandler {
@@ -86,6 +87,7 @@ public class DefaultLeaderElectionService
         synchronized (lock) {
             leaderContender = contender;
             leaderElectionDriver =
+                    //@mark: 常用ZooKeeperLeaderElectionDriver生成选举驱动器
                     leaderElectionDriverFactory.createLeaderElectionDriver(
                             this,
                             new LeaderElectionFatalErrorHandler(),
@@ -207,7 +209,14 @@ public class DefaultLeaderElectionService
                             leaderContender.getDescription(),
                             issuedLeaderSessionID);
                 }
-
+                //@mark: 调用LeaderContender的grantLeadership方法实际赋予leader
+                /**
+                 * LeaderContender:
+                 * dispatcher: DefaultDispatcherRunner
+                 * rm: ResourceManager
+                 * jobmaster: JobManagerRunnerImpl
+                 * webmonitorEndpoint: WebMonitorEndpoint
+                 */
                 leaderContender.grantLeadership(issuedLeaderSessionID);
             } else {
                 if (LOG.isDebugEnabled()) {

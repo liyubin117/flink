@@ -72,6 +72,8 @@ public class SessionDispatcherLeaderProcess extends AbstractDispatcherLeaderProc
 
     @Override
     protected void onStart() {
+        //@mark: session模式启动Dispatcher
+
         startServices();
 
         onGoingRecoveryOperation =
@@ -82,6 +84,7 @@ public class SessionDispatcherLeaderProcess extends AbstractDispatcherLeaderProc
 
     private void startServices() {
         try {
+            //@mark: 启动JobGraphStore，存储JobGraph
             jobGraphStore.start(this);
         } catch (Exception e) {
             throw new FlinkRuntimeException(
