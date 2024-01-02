@@ -117,6 +117,7 @@ public class ZooKeeperLeaderRetrievalDriver
         }
     }
 
+    //@mark: 真正的zk监听逻辑
     @Override
     public void nodeChanged() {
         retrieveLeaderInformationFromZooKeeper();
@@ -136,6 +137,7 @@ public class ZooKeeperLeaderRetrievalDriver
 
                     final String leaderAddress = ois.readUTF();
                     final UUID leaderSessionID = (UUID) ois.readObject();
+                    //@mark: 在调用handler过程中又调用listener
                     leaderRetrievalEventHandler.notifyLeaderAddress(
                             LeaderInformation.known(leaderSessionID, leaderAddress));
                     return;

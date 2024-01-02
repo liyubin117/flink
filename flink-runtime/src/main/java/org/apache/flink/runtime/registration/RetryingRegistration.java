@@ -145,6 +145,7 @@ public abstract class RetryingRegistration<
             final CompletableFuture<G> rpcGatewayFuture;
 
             if (FencedRpcGateway.class.isAssignableFrom(targetType)) {
+                //@mark: 连接
                 rpcGatewayFuture =
                         (CompletableFuture<G>)
                                 rpcService.connect(
@@ -160,6 +161,7 @@ public abstract class RetryingRegistration<
                     rpcGatewayFuture.thenAcceptAsync(
                             (G rpcGateway) -> {
                                 log.info("Resolved {} address, beginning registration", targetName);
+                                //@mark: 连接后执行注册
                                 register(
                                         rpcGateway,
                                         1,
@@ -171,6 +173,7 @@ public abstract class RetryingRegistration<
             // upon failure, retry, unless this is cancelled
             rpcGatewayAcceptFuture.whenCompleteAsync(
                     (Void v, Throwable failure) -> {
+                        //@mark: 注册若失败会重试
                         if (failure != null && !canceled) {
                             final Throwable strippedFailure =
                                     ExceptionUtils.stripCompletionException(failure);
@@ -218,6 +221,7 @@ public abstract class RetryingRegistration<
                     targetName,
                     attempt,
                     timeoutMillis);
+            //@mark: 注册的核心逻辑
             CompletableFuture<RegistrationResponse> registrationFuture =
                     invokeRegistration(gateway, fencingToken, timeoutMillis);
 

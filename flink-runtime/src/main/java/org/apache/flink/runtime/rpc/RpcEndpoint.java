@@ -193,7 +193,7 @@ public abstract class RpcEndpoint implements RpcGateway, AutoCloseableAsync {
      * @throws Exception indicating that the rpc endpoint could not be started. If an exception
      *     occurs, then the rpc endpoint will automatically terminate.
      */
-    protected void onStart() throws Exception {}
+    protected void onStart() throws Exception {} //@mark: rpc endpoint actor生成后会自动调用
 
     /**
      * Triggers stop of the rpc endpoint. This tells the underlying rpc server that the rpc endpoint

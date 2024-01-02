@@ -206,7 +206,7 @@ public class HeartbeatManagerImpl<I, O> implements HeartbeatManager<I, O> {
     public void requestHeartbeat(final ResourceID requestOrigin, I heartbeatPayload) {
         if (!stopped) {
             log.debug("Received heartbeat request from {}.", requestOrigin);
-            //@mark: 汇报心跳
+            //@mark: 接收到心跳请求后，汇报心跳
             final HeartbeatTarget<O> heartbeatTarget = reportHeartbeat(requestOrigin);
 
             if (heartbeatTarget != null) {

@@ -240,6 +240,7 @@ public abstract class RegisteredRpcConnection<
     // ------------------------------------------------------------------------
 
     private RetryingRegistration<F, G, S, R> createNewRegistration() {
+        //@mark: 在tm向rm注册连接时，调用的是TaskExecutorToResourceManagerConnection#generateRegistration()，返回ResourceManagerRegistration
         RetryingRegistration<F, G, S, R> newRegistration = checkNotNull(generateRegistration());
 
         CompletableFuture<RetryingRegistration.RetryingRegistrationResult<G, S, R>> future =

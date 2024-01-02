@@ -262,13 +262,13 @@ public class TaskManagerServices {
 
         // pre-start checks
         checkTempDirs(taskManagerServicesConfiguration.getTmpDirPaths());
-
+        //@mark: 任务事件分派器，负责从消费task发送消费结果给上游生产task，是一个向后事件，此向后事件仅适用于生成流水线结果的任务，即生成、消费task同时运行的时候
         final TaskEventDispatcher taskEventDispatcher = new TaskEventDispatcher();
 
         // start the I/O manager, it will create some temp directories.
         final IOManager ioManager =
                 new IOManagerAsync(taskManagerServicesConfiguration.getTmpDirPaths());
-
+        //@mark: 生成ShuffleEnvironment，实现是NettyShuffleEnvironment。用于算子间shuffle
         final ShuffleEnvironment<?, ?> shuffleEnvironment =
                 createShuffleEnvironment(
                         taskManagerServicesConfiguration,
@@ -276,7 +276,7 @@ public class TaskManagerServices {
                         taskManagerMetricGroup,
                         ioExecutor);
         final int listeningDataPort = shuffleEnvironment.start();
-
+        //@mark: 生成KvStateService，用于算子间状态共享
         final KvStateService kvStateService =
                 KvStateService.fromConfiguration(taskManagerServicesConfiguration);
         kvStateService.start();
@@ -292,7 +292,7 @@ public class TaskManagerServices {
                                 : listeningDataPort);
 
         final BroadcastVariableManager broadcastVariableManager = new BroadcastVariableManager();
-
+        //@mark: 生成TaskSlotTable，当前节点提供很多slot，也会执行很多task，此table将task映射到slot，且记录由哪个job申请到，且会存储状态，且会启动定时任务检查slot空闲达到超时后将slot释放
         final TaskSlotTable<Task> taskSlotTable =
                 createTaskSlotTable(
                         taskManagerServicesConfiguration.getNumberOfSlots(),
@@ -300,9 +300,9 @@ public class TaskManagerServices {
                         taskManagerServicesConfiguration.getTimerServiceShutdownTimeout(),
                         taskManagerServicesConfiguration.getPageSize(),
                         ioExecutor);
-
+        //@mark: 生成DefaultJobTable，管理此tm运行的所有job的生命周期
         final JobTable jobTable = DefaultJobTable.create();
-
+        //@mark: 监控job master作业负责人
         final JobLeaderService jobLeaderService =
                 new DefaultJobLeaderService(
                         unresolvedTaskManagerLocation,

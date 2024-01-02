@@ -300,6 +300,7 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
         this.shuffleEnvironment = taskExecutorServices.getShuffleEnvironment();
         this.kvStateService = taskExecutorServices.getKvStateService();
         this.ioExecutor = taskExecutorServices.getIOExecutor();
+        //@mark: 一般使用zk高可用，通过ZooKeeperUtils.createLeaderRetrievalService拿到DefaultLeaderRetrievalService
         this.resourceManagerLeaderRetriever = haServices.getResourceManagerLeaderRetriever();
 
         this.hardwareDescription =
@@ -313,6 +314,7 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
 
         final ResourceID resourceId =
                 taskExecutorServices.getUnresolvedTaskManagerLocation().getResourceID();
+        //@mark: 初始化tm对jm、rm的心跳
         this.jobManagerHeartbeatManager =
                 createJobManagerHeartbeatManager(heartbeatServices, resourceId);
         this.resourceManagerHeartbeatManager =
@@ -372,6 +374,7 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
     @Override
     public void onStart() throws Exception {
         try {
+            //@mark: tm rpc endpoint启动
             startTaskExecutorServices();
         } catch (Throwable t) {
             final TaskManagerException exception =
@@ -380,22 +383,22 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
             onFatalError(exception);
             throw exception;
         }
-
+        //@mark: 注册超时检查，从配置taskmanager.registration.timeout取超时，默认5分钟
         startRegistrationTimeout();
     }
-
+    //@mark: tm初始化基础服务后，启动TaskExecutor
     private void startTaskExecutorServices() throws Exception {
         try {
-            // start by connecting to the ResourceManager
+            //@mark: 与rm leader建立连接，监听rm，连接过程中会启动心跳，当rm leader变化后重连rm
             resourceManagerLeaderRetriever.start(new ResourceManagerLeaderListener());
 
-            // tell the task slot table who's responsible for the task slot actions
+            //@mark: 启动taskSlotTable tell the task slot table who's responsible for the task slot actions
             taskSlotTable.start(new SlotActionsImpl(), getMainThreadExecutor());
 
-            // start the job leader service
+            //@mark: 监控jobMaster的变化
             jobLeaderService.start(
                     getAddress(), getRpcService(), haServices, new JobLeaderListenerImpl());
-
+            //@mark: 初始化FileCache
             fileCache =
                     new FileCache(
                             taskManagerConfiguration.getTmpDirectories(),
@@ -992,7 +995,7 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
     // ----------------------------------------------------------------------
     // Slot allocation RPCs
     // ----------------------------------------------------------------------
-
+    //@mark: 被其他组件调用，向tm请求slot
     @Override
     public CompletableFuture<Acknowledge> requestSlot(
             final SlotID slotId,
@@ -1053,7 +1056,7 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
             return FutureUtils.completedExceptionally(
                     new SlotAllocationException("Could not create new job.", e));
         }
-
+        //@mark: 若某job已连接上，则提供slot给jm
         if (job.isConnected()) {
             offerSlotsToJobManager(jobId);
         }
@@ -1240,9 +1243,13 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
         }
     }
 
+    //@mark: 重连rm
     private void reconnectToResourceManager(Exception cause) {
+        //@mark: 关闭和原有rm的连接
         closeResourceManagerConnection(cause);
+        //@mark: 注册超时
         startRegistrationTimeout();
+        //@mark: 连接rm
         tryConnectToResourceManager();
     }
 
@@ -1383,11 +1390,13 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
     }
 
     private void startRegistrationTimeout() {
+        //@mark: 取配置taskmanager.registration.timeout，默认最大超时5分钟
         final Time maxRegistrationDuration = taskManagerConfiguration.getMaxRegistrationDuration();
 
         if (maxRegistrationDuration != null) {
             final UUID newRegistrationTimeoutId = UUID.randomUUID();
             currentRegistrationTimeoutId = newRegistrationTimeoutId;
+            //@mark: 按指定超时时间延长执行检测
             scheduleRunAsync(
                     () -> registrationTimeout(newRegistrationTimeoutId), maxRegistrationDuration);
         }
@@ -1398,6 +1407,7 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
     }
 
     private void registrationTimeout(@Nonnull UUID registrationTimeoutId) {
+        //@mark: 达到超时时长后，若超时标志还是之前启动定时任务时的标志则说明此期间未有新的定时注册，说明超时了
         if (registrationTimeoutId.equals(currentRegistrationTimeoutId)) {
             final Time maxRegistrationDuration =
                     taskManagerConfiguration.getMaxRegistrationDuration();

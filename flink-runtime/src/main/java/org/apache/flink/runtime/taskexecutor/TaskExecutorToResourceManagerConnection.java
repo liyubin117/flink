@@ -156,6 +156,7 @@ public class TaskExecutorToResourceManagerConnection
                 throws Exception {
 
             Time timeout = Time.milliseconds(timeoutMillis);
+            //@mark: tm向rm注册时调用rm RpcGateway的registerTaskExecutor方法
             return resourceManager.registerTaskExecutor(taskExecutorRegistration, timeout);
         }
     }

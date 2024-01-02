@@ -427,6 +427,7 @@ public abstract class ResourceManager<WorkerType extends ResourceIDRetrievable>
                 ioExecutor);
     }
 
+    //@mark: 处理向rm注册tm的请求
     @Override
     public CompletableFuture<RegistrationResponse> registerTaskExecutor(
             final TaskExecutorRegistration taskExecutorRegistration, final Time timeout) {
@@ -952,6 +953,7 @@ public abstract class ResourceManager<WorkerType extends ResourceIDRetrievable>
             return new TaskExecutorRegistrationRejection(
                     "The ResourceManager does not recognize this TaskExecutor.");
         } else {
+            //@mark: 构造WorkerRegistration对象
             WorkerRegistration<WorkerType> registration =
                     new WorkerRegistration<>(
                             taskExecutorGateway,

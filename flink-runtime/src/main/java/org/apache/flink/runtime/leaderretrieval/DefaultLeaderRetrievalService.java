@@ -82,7 +82,7 @@ public class DefaultLeaderRetrievalService
 
         running = false;
     }
-
+    //@mark: 启动并开始监听
     @Override
     public void start(LeaderRetrievalListener listener) throws Exception {
         checkNotNull(listener, "Listener must not be null.");
@@ -121,6 +121,7 @@ public class DefaultLeaderRetrievalService
      * @param leaderInformation new notified leader information address. The exception will be
      *     handled by leader listener.
      */
+    //@mark: 当ZooKeeperLeaderRetrievalDriver#nodeChanged触发时，监听到leader变化时，再回调该方法，retrieval更新成新的leader
     @Override
     @GuardedBy("lock")
     public void notifyLeaderAddress(LeaderInformation leaderInformation) {

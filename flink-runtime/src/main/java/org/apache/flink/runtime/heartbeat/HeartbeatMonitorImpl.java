@@ -90,9 +90,11 @@ public class HeartbeatMonitorImpl<O> implements HeartbeatMonitor<O>, Runnable {
         return lastHeartbeat;
     }
 
+    //@mark: 关于主从节点的心跳，首先启动rm HeartbeatManager，每10s向注册的tm发送心跳请求，再启动tm，接收到心跳相当于已建立连接，然后启动超时检查任务(5分钟)，每次接收到心跳后重置超时任务
     @Override
     public void reportHeartbeat() {
         lastHeartbeat = System.currentTimeMillis();
+        //@mark: 取消当前注册的超时任务，重新注册一个新的超时任务
         resetHeartbeatTimeout(heartbeatTimeoutIntervalMs);
     }
 
@@ -106,6 +108,7 @@ public class HeartbeatMonitorImpl<O> implements HeartbeatMonitor<O>, Runnable {
 
     @Override
     public void run() {
+        //@mark: 心跳超时检测，若检测任务开始时状态仍为running，则说明已超时先置状态为timeout，再向监听器汇报已超时
         // The heartbeat has timed out if we're in state running
         if (state.compareAndSet(State.RUNNING, State.TIMEOUT)) {
             heartbeatListener.notifyHeartbeatTimeout(resourceID);
@@ -116,6 +119,7 @@ public class HeartbeatMonitorImpl<O> implements HeartbeatMonitor<O>, Runnable {
         return state.get() == State.CANCELED;
     }
 
+    //@mark: 重置心跳超时任务，若状态正在运行则取消之前的超时，重新注册一个新的超时任务，默认50s
     void resetHeartbeatTimeout(long heartbeatTimeout) {
         if (state.get() == State.RUNNING) {
             cancelTimeout();

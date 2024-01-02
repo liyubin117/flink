@@ -59,6 +59,7 @@ public class NettyConnectionManager implements ConnectionManager {
 
     @Override
     public int start() throws IOException {
+        //@mark: 启动netty客户端和服务端
         client.init(nettyProtocol, bufferPool);
 
         return server.init(nettyProtocol, bufferPool);

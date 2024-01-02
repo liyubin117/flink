@@ -106,7 +106,7 @@ public class NettyShuffleServiceFactory
 
         FileChannelManager fileChannelManager =
                 new FileChannelManagerImpl(config.getTempDirs(), DIR_NAME_PREFIX);
-
+        //@mark: 管理netty连接
         ConnectionManager connectionManager =
                 nettyConfig != null
                         ? new NettyConnectionManager(

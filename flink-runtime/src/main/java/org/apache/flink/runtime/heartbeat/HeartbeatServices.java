@@ -109,7 +109,7 @@ public class HeartbeatServices {
         long heartbeatInterval = configuration.getLong(HeartbeatManagerOptions.HEARTBEAT_INTERVAL);
 
         long heartbeatTimeout = configuration.getLong(HeartbeatManagerOptions.HEARTBEAT_TIMEOUT);
-
+        //@mark: 默认心跳间隔10s，默认心跳超时50s
         return new HeartbeatServices(heartbeatInterval, heartbeatTimeout);
     }
 }

@@ -71,9 +71,10 @@ public class HeartbeatManagerSenderImpl<I, O> extends HeartbeatManagerImpl<I, O>
                 heartbeatMonitorFactory);
 
         this.heartbeatPeriod = heartbeatPeriod;
+        //@mark: 构造本线程对象时立即调度一次run
         mainThreadExecutor.schedule(this, 0L, TimeUnit.MILLISECONDS);
     }
-
+    //@mark: 非常关键！！！心跳线程的逻辑体，遍历所有的heartbeatTarget，向其请求心跳
     @Override
     public void run() {
         if (!stopped) {
@@ -81,7 +82,7 @@ public class HeartbeatManagerSenderImpl<I, O> extends HeartbeatManagerImpl<I, O>
             for (HeartbeatMonitor<O> heartbeatMonitor : getHeartbeatTargets().values()) {
                 requestHeartbeat(heartbeatMonitor);
             }
-
+            //@mark: 延迟调度，默认间隔10s。调度本线程又执行run，从而实现了心跳的周期性
             getMainThreadExecutor().schedule(this, heartbeatPeriod, TimeUnit.MILLISECONDS);
         }
     }

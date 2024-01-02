@@ -154,7 +154,7 @@ public class TaskManagerRunner implements FatalErrorHandler {
         this.resourceId =
                 getTaskManagerResourceID(
                         configuration, rpcService.getAddress(), rpcService.getPort());
-
+        //@mark: 生成tm的心跳服务
         HeartbeatServices heartbeatServices = HeartbeatServices.fromConfiguration(configuration);
 
         metricRegistry =
@@ -165,7 +165,7 @@ public class TaskManagerRunner implements FatalErrorHandler {
         final RpcService metricQueryServiceRpcService =
                 MetricUtils.startRemoteMetricsRpcService(configuration, rpcService.getAddress());
         metricRegistry.startQueryService(metricQueryServiceRpcService, resourceId);
-
+        //@mark: 主节点jm启动BlobServer，从节点启动的是BlobCacheService，具体是生成了永久、临时两个BlobCache。定时检查、删除过期的job资源文件，通过引用计数方式判断是否过期
         blobCacheService =
                 new BlobCacheService(
                         configuration, highAvailabilityServices.createBlobStore(), null);
@@ -341,6 +341,7 @@ public class TaskManagerRunner implements FatalErrorHandler {
     //  Static entry point
     // --------------------------------------------------------------------------------------------
 
+    //@mark: TaskManager的入口方法，tm负责管理本机的slot资源并向jm汇报，并负责具体任务的执行。tm的基本资源单位是slot，一个作业的task最终会在一个slot执行
     public static void main(String[] args) throws Exception {
         // startup checks and logging
         EnvironmentInformation.logEnvironmentInfo(LOG, "TaskManager", args);
@@ -372,6 +373,7 @@ public class TaskManagerRunner implements FatalErrorHandler {
                     new TaskManagerRunner(
                             configuration,
                             pluginManager,
+                            //@mark: 创建TaskExecutorService，过程中会启动TaskExecutor。此处是一个lambda表达式，重写了TaskExecutorServiceFactory接口的createTaskExecutorService方法，生成一个新的factory实例
                             TaskManagerRunner::createTaskExecutorService);
             taskManagerRunner.start();
         } catch (Exception exception) {
@@ -461,7 +463,7 @@ public class TaskManagerRunner implements FatalErrorHandler {
 
         return TaskExecutorToServiceAdapter.createFor(taskExecutor);
     }
-
+    //@mark: 生成并启动TaskExecutor
     public static TaskExecutor startTaskManager(
             Configuration configuration,
             ResourceID resourceID,
@@ -483,10 +485,11 @@ public class TaskManagerRunner implements FatalErrorHandler {
         LOG.info("Starting TaskManager with ResourceID: {}", resourceID.getStringWithMetadata());
 
         String externalAddress = rpcService.getAddress();
-
+        //@mark: 获取资源定义对象，一个执行节点有哪些cpu核、堆内堆外内存、网络缓冲内存、管理内存，将来此tm注册时会将这些资源汇报给jm
         final TaskExecutorResourceSpec taskExecutorResourceSpec =
                 TaskExecutorResourceUtils.resourceSpecFromConfig(configuration);
 
+        //@mark: 从配置中提取 TaskManager 配置参数并对其进行健全性检查
         TaskManagerServicesConfiguration taskManagerServicesConfiguration =
                 TaskManagerServicesConfiguration.fromConfiguration(
                         configuration,
@@ -501,7 +504,7 @@ public class TaskManagerRunner implements FatalErrorHandler {
                         externalAddress,
                         resourceID,
                         taskManagerServicesConfiguration.getSystemResourceMetricsProbingInterval());
-
+        //@mark: tm的io线程池，有固定数量的线程，线程数从cluster.io-pool.size配置提取，默认是4倍cpu核数，用于netty缓冲区读写
         final ExecutorService ioExecutor =
                 Executors.newFixedThreadPool(
                         taskManagerServicesConfiguration.getNumIoThreads(),
@@ -538,6 +541,7 @@ public class TaskManagerRunner implements FatalErrorHandler {
                 blobCacheService,
                 fatalErrorHandler,
                 new TaskExecutorPartitionTrackerImpl(taskManagerServices.getShuffleEnvironment()),
+                //@mark: 反压采样服务
                 createBackPressureSampleService(configuration, rpcService.getScheduledExecutor()));
     }
 
