@@ -1185,7 +1185,7 @@ public class DataStream<T> {
 
         return doTransform(operatorName, outTypeInfo, operatorFactory);
     }
-
+    //@mark: StreamOperator -> Transformation，加入到StreamExecutionEnvironment的transformations列表
     protected <R> SingleOutputStreamOperator<R> doTransform(
             String operatorName,
             TypeInformation<R> outTypeInfo,
@@ -1205,7 +1205,7 @@ public class DataStream<T> {
         @SuppressWarnings({"unchecked", "rawtypes"})
         SingleOutputStreamOperator<R> returnStream =
                 new SingleOutputStreamOperator(environment, resultTransform);
-
+        //@mark: 很关键！！！
         getExecutionEnvironment().addOperator(resultTransform);
 
         return returnStream;

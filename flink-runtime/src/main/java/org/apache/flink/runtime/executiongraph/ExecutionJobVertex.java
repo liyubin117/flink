@@ -186,7 +186,7 @@ public class ExecutionJobVertex
                     new IntermediateResult(
                             result.getId(), this, numTaskVertices, result.getResultType());
         }
-
+        //@mark: ExecutionJobVertex的每个并行度对应一个ExecutionVertex
         // create all task vertices
         for (int i = 0; i < numTaskVertices; i++) {
             ExecutionVertex vertex =
@@ -422,7 +422,7 @@ public class ExecutionJobVertex
                             "Connecting ExecutionJobVertex %s (%s) to %d predecessors.",
                             jobVertex.getID(), jobVertex.getName(), inputs.size()));
         }
-
+        //@mark: 先从每个JobEdge获取对应的IntermediateResult
         for (int num = 0; num < inputs.size(); num++) {
             JobEdge edge = inputs.get(num);
 
@@ -460,7 +460,7 @@ public class ExecutionJobVertex
             this.inputs.add(ires);
 
             int consumerIndex = ires.registerConsumer();
-
+            //@mark: 根据并行度，将每个IntermediateResult的每个IntermediateResultPartition分配给对应的ExecutionVertex
             for (int i = 0; i < parallelism; i++) {
                 ExecutionVertex ev = taskVertices[i];
                 ev.connectSource(num, ires, edge, consumerIndex);

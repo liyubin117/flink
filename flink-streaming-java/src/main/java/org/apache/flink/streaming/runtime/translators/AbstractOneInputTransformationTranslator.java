@@ -59,7 +59,7 @@ abstract class AbstractOneInputTransformationTranslator<IN, OUT, OP extends Tran
         final String slotSharingGroup = context.getSlotSharingGroup();
         final int transformationId = transformation.getId();
         final ExecutionConfig executionConfig = streamGraph.getExecutionConfig();
-
+        //@mark: 生成StreamNode
         streamGraph.addOperator(
                 transformationId,
                 slotSharingGroup,
@@ -86,7 +86,7 @@ abstract class AbstractOneInputTransformationTranslator<IN, OUT, OP extends Tran
                 parentTransformations.size() == 1,
                 "Expected exactly one input transformation but found "
                         + parentTransformations.size());
-
+        //@mark: 在生成StreamNode的过程中生成StreamEdge，本算子是OneInputTransformation，即边的下游
         for (Integer inputId : context.getStreamNodeIds(parentTransformations.get(0))) {
             streamGraph.addEdge(inputId, transformationId, 0);
         }

@@ -257,7 +257,7 @@ public class StreamGraphGenerator {
     public void setSavepointRestoreSettings(SavepointRestoreSettings savepointRestoreSettings) {
         this.savepointRestoreSettings = savepointRestoreSettings;
     }
-
+    //@mark: 输入transformations，经过转换后输出StreamGraph
     public StreamGraph generate() {
         streamGraph = new StreamGraph(executionConfig, checkpointConfig, savepointRestoreSettings);
         shouldExecuteInBatchMode = shouldExecuteInBatchMode(runtimeExecutionMode);
@@ -648,9 +648,9 @@ public class StreamGraphGenerator {
             final Transformation<?> transform) {
         checkNotNull(translator);
         checkNotNull(transform);
-
+        //@mark: 递归转换上游节点
         final List<Collection<Integer>> allInputIds = getParentInputIds(transform.getInputs());
-
+        //@mark: 在转换过程中若之前已经转换过，则直接复用
         // the recursive call might have already transformed this
         if (alreadyTransformed.containsKey(transform)) {
             return alreadyTransformed.get(transform);

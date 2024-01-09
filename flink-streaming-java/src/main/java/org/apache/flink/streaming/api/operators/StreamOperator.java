@@ -28,6 +28,7 @@ import org.apache.flink.util.Disposable;
 
 import java.io.Serializable;
 
+//@mark: 流式算子的顶层接口
 /**
  * Basic interface for stream operators. Implementers would implement one of {@link
  * org.apache.flink.streaming.api.operators.OneInputStreamOperator} or {@link

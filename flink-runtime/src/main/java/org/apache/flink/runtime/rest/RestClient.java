@@ -110,7 +110,7 @@ public class RestClient implements AutoCloseableAsync {
     private final CompletableFuture<Void> terminationFuture;
 
     private final AtomicBoolean isRunning = new AtomicBoolean(true);
-
+    //@mark: 初始化一个netty客户端，用于提交应用
     public RestClient(RestClientConfiguration configuration, Executor executor) {
         Preconditions.checkNotNull(configuration);
         this.executor = Preconditions.checkNotNull(executor);
@@ -155,7 +155,7 @@ public class RestClient implements AutoCloseableAsync {
                 };
         NioEventLoopGroup group =
                 new NioEventLoopGroup(1, new ExecutorThreadFactory("flink-rest-client-netty"));
-
+        //@mark: 生成netty引导
         bootstrap = new Bootstrap();
         bootstrap
                 .option(
@@ -317,7 +317,7 @@ public class RestClient implements AutoCloseableAsync {
         objectMapper.writeValue(sw, request);
         ByteBuf payload =
                 Unpooled.wrappedBuffer(sw.toString().getBytes(ConfigConstants.DEFAULT_CHARSET));
-
+        //@mark: 先构造请求
         Request httpRequest =
                 createRequest(
                         targetAddress + ':' + targetPort,
@@ -340,7 +340,7 @@ public class RestClient implements AutoCloseableAsync {
                                     messageHeaders.getResponseClass(),
                                     typeParameters.toArray(new Class<?>[typeParameters.size()]));
         }
-
+        //@mark: 提交请求
         return submitRequest(targetAddress, targetPort, httpRequest, responseType);
     }
 
@@ -418,6 +418,7 @@ public class RestClient implements AutoCloseableAsync {
 
     private <P extends ResponseBody> CompletableFuture<P> submitRequest(
             String targetAddress, int targetPort, Request httpRequest, JavaType responseType) {
+        //@mark: 通过netty客户端连接netty服务端
         final ChannelFuture connectFuture = bootstrap.connect(targetAddress, targetPort);
 
         final CompletableFuture<Channel> channelFuture = new CompletableFuture<>();
@@ -444,6 +445,7 @@ public class RestClient implements AutoCloseableAsync {
                                     throw new IOException(
                                             "Netty pipeline was not properly initialized.");
                                 } else {
+                                    //@mark: 发送请求到WebMonitorEndpoint的netty服务端，由JobSubmitHandler处理
                                     httpRequest.writeTo(channel);
                                     future = handler.getJsonFuture();
                                     success = true;

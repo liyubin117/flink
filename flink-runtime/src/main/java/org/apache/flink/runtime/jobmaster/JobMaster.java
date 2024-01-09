@@ -327,6 +327,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
         this.shuffleMaster = checkNotNull(shuffleMaster);
 
         this.jobManagerJobMetricGroup = jobMetricGroupFactory.create(jobGraph);
+        //@mark: 初始化JobMaster时会创建Scheduler
         this.schedulerNG = createScheduler(executionDeploymentTracker, jobManagerJobMetricGroup);
         this.jobStatusListener = null;
 
@@ -883,7 +884,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
         }
 
         setNewFencingToken(newJobMasterId);
-
+        //@mark: 初始化JobMaster必要的服务，启动心跳服务、slotPool
         startJobMasterServices();
 
         log.info(
@@ -891,7 +892,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
                 jobGraph.getName(),
                 jobGraph.getJobID(),
                 newJobMasterId);
-
+        //@mark: JobMaster申请slot，调度StreamTask
         resetAndStartScheduler();
 
         return Acknowledge.get();
@@ -1015,7 +1016,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
         schedulerNG = newScheduler;
         jobManagerJobMetricGroup = newJobManagerJobMetricGroup;
     }
-
+    //@mark: 启动调度器
     private void resetAndStartScheduler() throws Exception {
         validateRunsInMainThread();
 
@@ -1030,6 +1031,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
                             "ExecutionGraph is being reset in order to be rescheduled."));
             final JobManagerJobMetricGroup newJobManagerJobMetricGroup =
                     jobMetricGroupFactory.create(jobGraph);
+            //@mark: 生成DefaultScheduler
             final SchedulerNG newScheduler =
                     createScheduler(executionDeploymentTracker, newJobManagerJobMetricGroup);
 
@@ -1344,7 +1346,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
                         ResourceManagerId fencingToken,
                         long timeoutMillis) {
                     Time timeout = Time.milliseconds(timeoutMillis);
-
+                    //@mark: 向rm注册JobMaster
                     return gateway.registerJobManager(
                             jobMasterId,
                             jobManagerResourceID,

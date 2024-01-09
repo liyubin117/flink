@@ -323,6 +323,7 @@ public class PackagedProgram implements AutoCloseable {
         }
 
         try {
+            //@mark: 使用反射的方式调用编写的应用程序的main方法
             mainMethod = entryClass.getMethod("main", String[].class);
         } catch (NoSuchMethodException e) {
             throw new ProgramInvocationException(

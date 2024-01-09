@@ -84,7 +84,9 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import static org.apache.flink.util.Preconditions.checkNotNull;
-
+/**
+ * @mark: 运行环境，本地运行使用LocalEnvironment，远程运行使用RemoteEnvironment
+ */
 /**
  * The ExecutionEnvironment is the context in which a program is executed. A {@link
  * LocalEnvironment} will cause execution in the current JVM, a {@link RemoteEnvironment} will cause

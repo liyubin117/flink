@@ -114,7 +114,17 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import static org.apache.flink.util.Preconditions.checkNotNull;
-
+/**
+ * @mark: 流式任务运行环境
+ * 1. 提供addSource()等方法获取数据源
+ * 2. setParallelism()设置并行度
+ * 3. 管理ExecutionConfig对象，负责job运行的行为参数
+ * 4. 提供execute()，提交job运行，接收的参数是StreamGraph
+ * 5. transformations成员变量，是一个list，保存job各种算子转换得到的transformation，Function -> StreamOperator -> Transformation -> StreamNode，把这些节点拼接起来就能生成StreamGraph
+ * 由客户端完成StreamGraph（由StreamNode、StreamEdge组成） -> JobGraph（由JobVertex、IntermediateDataSet、JobEdge组成），将可chain的算子合成一个节点，减少节点间序列化反序列化的传输开销
+ * JobGraph -> ExecutionGraph，并行化调度，由ExecutionJobVertex（一个可包含多个ExecutionVertex）、IntermediateResult（一个可包含多个IntermediateResultPartition，分别对应一个上游的ExecutionVertex和一个或多个下游的ExecutionEdge）、ExecutionEdge组成
+ * ExecutionGraph -> 物理执行图，由Task、ResultPartition（一个可包含多个ResultSubPartition）、InputGate（可包含一个或多个InputChannel）组成
+ */
 /**
  * The StreamExecutionEnvironment is the context in which a streaming program is executed. A {@link
  * LocalStreamEnvironment} will cause execution in the current JVM, a {@link
@@ -1683,7 +1693,7 @@ public class StreamExecutionEnvironment {
         boolean isParallel = function instanceof ParallelSourceFunction;
 
         clean(function);
-
+        //@mark: StreamSource是StreamOperator子类
         final StreamSource<OUT, ?> sourceOperator = new StreamSource<>(function);
         return new DataStreamSource<>(
                 this, resolvedTypeInfo, sourceOperator, isParallel, sourceName, boundedness);
@@ -1778,7 +1788,7 @@ public class StreamExecutionEnvironment {
      */
     public JobExecutionResult execute(String jobName) throws Exception {
         Preconditions.checkNotNull(jobName, "Streaming Job name should not be null.");
-
+        //@mark: 先获取StreamGraph，再执行
         return execute(getStreamGraph(jobName));
     }
 
@@ -1898,7 +1908,7 @@ public class StreamExecutionEnvironment {
                 executorFactory,
                 "Cannot find compatible factory for specified execution.target (=%s)",
                 configuration.get(DeploymentOptions.TARGET));
-
+        //@mark: 若是yarn session模式则调用YarnSessionClusterExecutorFactory#getExecutor获得YarnSessionClusterExecutor
         CompletableFuture<JobClient> jobClientFuture =
                 executorFactory
                         .getExecutor(configuration)

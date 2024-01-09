@@ -139,7 +139,7 @@ public class RestClusterClient<T> implements ClusterClient<T> {
     private final RestClusterClientConfiguration restClusterClientConfiguration;
 
     private final Configuration configuration;
-
+    //@mark: 包装了RestClient netty客户端
     private final RestClient restClient;
 
     private final ExecutorService executorService =
@@ -297,6 +297,7 @@ public class RestClusterClient<T> implements ClusterClient<T> {
                 CompletableFuture.supplyAsync(
                         () -> {
                             try {
+                                //@mark: 先把JobGraph序列化到临时文件中，前缀是flink-jobgrpah，后缀是.bin，提交到集群的就是这个文件，由JobManager的WebMonitorEndpoint的JobSubmitHandler处理
                                 final java.nio.file.Path jobGraphFile =
                                         Files.createTempFile("flink-jobgraph", ".bin");
                                 try (ObjectOutputStream objectOut =
@@ -319,11 +320,11 @@ public class RestClusterClient<T> implements ClusterClient<T> {
                             List<JobSubmitRequestBody.DistributedCacheFile> artifactFileNames =
                                     new ArrayList<>(8);
                             Collection<FileUpload> filesToUpload = new ArrayList<>(8);
-
+                            //@mark: 将前述jobgraph文件加入到待上传的文件列表
                             filesToUpload.add(
                                     new FileUpload(
                                             jobGraphFile, RestConstants.CONTENT_TYPE_BINARY));
-
+                            //@mark: 将用户jar包加入到待上传的文件列表
                             for (Path jar : jobGraph.getUserJars()) {
                                 jarFileNames.add(jar.getName());
                                 filesToUpload.add(
@@ -331,7 +332,7 @@ public class RestClusterClient<T> implements ClusterClient<T> {
                                                 Paths.get(jar.toUri()),
                                                 RestConstants.CONTENT_TYPE_JAR));
                             }
-
+                            //@mark: 将用户的local artifact文件加入到待上传的文件列表
                             for (Map.Entry<String, DistributedCache.DistributedCacheEntry>
                                     artifacts : jobGraph.getUserArtifacts().entrySet()) {
                                 final Path artifactFilePath =
@@ -363,7 +364,7 @@ public class RestClusterClient<T> implements ClusterClient<T> {
                                             jobGraphFile.getFileName().toString(),
                                             jarFileNames,
                                             artifactFileNames);
-
+                            //@mark: 组合前述JobSubmitRequestBody和待上传的文件列表
                             return Tuple2.of(
                                     requestBody, Collections.unmodifiableCollection(filesToUpload));
                         });
@@ -371,6 +372,7 @@ public class RestClusterClient<T> implements ClusterClient<T> {
         final CompletableFuture<JobSubmitResponseBody> submissionFuture =
                 requestFuture.thenCompose(
                         requestAndFileUploads ->
+                                //@mark: 向WebMonitorEndpoint发送上传文件的请求
                                 sendRetriableRequest(
                                         JobSubmitHeaders.getInstance(),
                                         EmptyMessageParameters.getInstance(),
@@ -383,6 +385,7 @@ public class RestClusterClient<T> implements ClusterClient<T> {
                 .thenAccept(
                         jobGraphFile -> {
                             try {
+                                //@mark: 上传完成后删除临时文件
                                 Files.delete(jobGraphFile);
                             } catch (IOException e) {
                                 LOG.warn("Could not delete temporary file {}.", jobGraphFile, e);

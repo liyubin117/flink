@@ -263,7 +263,7 @@ public abstract class SchedulerBase implements SchedulerNG, CheckpointScheduling
 
         this.coordinatorMap = createCoordinatorMap();
     }
-
+    //@mark: 调度器会把JobGraph转换成ExecutionGraph，增加并行化处理
     private ExecutionGraph createAndRestoreExecutionGraph(
             JobManagerJobMetricGroup currentJobManagerJobMetricGroup,
             ShuffleMaster<?> shuffleMaster,

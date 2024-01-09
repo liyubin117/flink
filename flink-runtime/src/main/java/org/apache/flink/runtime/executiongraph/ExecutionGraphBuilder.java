@@ -177,6 +177,7 @@ public class ExecutionGraphBuilder {
         // create a new execution graph, if none exists so far
         final ExecutionGraph executionGraph;
         try {
+            //@mark: 创建ExecutionGraph对象
             executionGraph =
                     (prior != null)
                             ? prior
@@ -206,6 +207,7 @@ public class ExecutionGraphBuilder {
         // set the basic properties
 
         try {
+            //@mark: 生成ExecutionGraph的json plan形式
             executionGraph.setJsonPlan(JsonPlanGenerator.generatePlan(jobGraph));
         } catch (Throwable t) {
             log.warn("Cannot create JSON plan for job", t);
@@ -218,7 +220,7 @@ public class ExecutionGraphBuilder {
 
         final long initMasterStart = System.nanoTime();
         log.info("Running initialization on master for job {} ({}).", jobName, jobId);
-
+        //@mark: 遍历JobGraph每个节点，调用master初始化
         for (JobVertex vertex : jobGraph.getVertices()) {
             String executableClass = vertex.getInvokableClassName();
             if (executableClass == null || executableClass.isEmpty()) {

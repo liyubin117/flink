@@ -347,6 +347,7 @@ public class JobManagerRunnerImpl
                 jobMasterService.getAddress());
 
         try {
+            //@mark: 把当前任务设置为running状态，持久化到zk
             runningJobsRegistry.setJobRunning(jobGraph.getJobID());
         } catch (IOException e) {
             return FutureUtils.completedExceptionally(

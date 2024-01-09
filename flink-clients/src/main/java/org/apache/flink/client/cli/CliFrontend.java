@@ -837,7 +837,7 @@ public class CliFrontend {
         String jarFilePath = runOptions.getJarFilePath();
         List<URL> classpaths = runOptions.getClasspaths();
 
-        // Get assembler class
+        // Get assembler class 从-c参数获取用户jar的入口类
         String entryPointClass = runOptions.getEntryPointClassName();
         File jarFile = jarFilePath != null ? getJarFile(jarFilePath) : null;
 
@@ -1040,7 +1040,7 @@ public class CliFrontend {
             System.out.println("Please specify an action.");
             return 1;
         }
-
+        //@mark: flink run args...，run是第一个参数
         // get action
         String action = args[0];
 
@@ -1108,7 +1108,7 @@ public class CliFrontend {
             return handleError(e);
         }
     }
-
+    //@mark: 提交flink任务的入口
     /** Submits the job based on the arguments. */
     public static void main(final String[] args) {
         EnvironmentInformation.logEnvironmentInfo(LOG, "Command Line Client", args);
@@ -1116,11 +1116,11 @@ public class CliFrontend {
         // 1. find the configuration directory
         final String configurationDirectory = getConfigurationDirectoryFromEnv();
 
-        // 2. load the global configuration
+        // 2. load the global configuration flink-conf.yaml
         final Configuration configuration =
                 GlobalConfiguration.loadConfiguration(configurationDirectory);
 
-        // 3. load the custom command lines
+        // 3. load the custom command lines 自定义参数
         final List<CustomCommandLine> customCommandLines =
                 loadCustomCommandLines(configuration, configurationDirectory);
 

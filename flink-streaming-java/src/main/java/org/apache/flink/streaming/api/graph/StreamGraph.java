@@ -256,6 +256,7 @@ public class StreamGraph implements Pipeline {
             TypeInformation<IN> inTypeInfo,
             TypeInformation<OUT> outTypeInfo,
             String operatorName) {
+        //@mark: 将source transformation转换成StreamNode，添加到StreamGraph中，Transformation id作为StreamNode id
         addOperator(
                 vertexID,
                 slotSharingGroup,
@@ -446,7 +447,7 @@ public class StreamGraph implements Pipeline {
         if (streamNodes.containsKey(vertexID)) {
             throw new RuntimeException("Duplicate vertexID " + vertexID);
         }
-
+        //@mark: StreamNode生成
         StreamNode vertex =
                 new StreamNode(
                         vertexID,
@@ -455,7 +456,7 @@ public class StreamGraph implements Pipeline {
                         operatorFactory,
                         operatorName,
                         vertexClass);
-
+        //@mark: 将生成的StreamNode添加到映射，键是StreamNode id
         streamNodes.put(vertexID, vertex);
 
         return vertex;
@@ -588,6 +589,7 @@ public class StreamGraph implements Pipeline {
                     outputTag,
                     shuffleMode);
         } else {
+            //@mark: 拿到上下游StreamNode
             StreamNode upstreamNode = getStreamNode(upStreamVertexID);
             StreamNode downstreamNode = getStreamNode(downStreamVertexID);
 
@@ -619,7 +621,7 @@ public class StreamGraph implements Pipeline {
             if (shuffleMode == null) {
                 shuffleMode = ShuffleMode.UNDEFINED;
             }
-
+            //@mark: 生成StreamEdge
             StreamEdge edge =
                     new StreamEdge(
                             upstreamNode,
@@ -628,7 +630,7 @@ public class StreamGraph implements Pipeline {
                             partitioner,
                             outputTag,
                             shuffleMode);
-
+            //@mark: 给上游添加出边，给下游添加入边
             getStreamNode(edge.getSourceId()).addOutEdge(edge);
             getStreamNode(edge.getTargetId()).addInEdge(edge);
         }

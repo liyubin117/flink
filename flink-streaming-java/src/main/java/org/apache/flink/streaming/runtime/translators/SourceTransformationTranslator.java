@@ -77,7 +77,7 @@ public class SourceTransformationTranslator<OUT, SplitT extends SourceSplit, Enu
                         emitProgressiveWatermarks);
 
         operatorFactory.setChainingStrategy(transformation.getChainingStrategy());
-
+        //@mark: 往StreamGraph添加一个source StreamNode
         streamGraph.addSource(
                 transformationId,
                 slotSharingGroup,

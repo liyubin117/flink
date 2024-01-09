@@ -358,6 +358,7 @@ public class ExecutionVertex
             int inputNumber, IntermediateResult source, JobEdge edge, int consumerNumber) {
 
         final DistributionPattern pattern = edge.getDistributionPattern();
+        //@mark: 一个IntermediateResult包含一个或多个IntermediateResultPartition
         final IntermediateResultPartition[] sourcePartitions = source.getPartitions();
 
         ExecutionEdge[] edges;

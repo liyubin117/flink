@@ -91,7 +91,7 @@ public abstract class AbstractTwoInputTransformationTranslator<
                         : executionConfig.getParallelism();
         streamGraph.setParallelism(transformationId, parallelism);
         streamGraph.setMaxParallelism(transformationId, transformation.getMaxParallelism());
-
+        //@mark: 本算子有两个输入，对上游两个算子生成StreamEdge
         for (Integer inputId : context.getStreamNodeIds(firstInputTransformation)) {
             streamGraph.addEdge(inputId, transformationId, 1);
         }

@@ -64,6 +64,7 @@ public class AbstractSessionClusterExecutor<
             @Nonnull final Configuration configuration,
             @Nonnull final ClassLoader userCodeClassloader)
             throws Exception {
+        //@mark: 输入Pipeline和Configuration，Pipeline是顶层接口，StreamGraph是其流式拓扑的实现，生成JobGraph
         final JobGraph jobGraph = PipelineExecutorUtils.getJobGraph(pipeline, configuration);
 
         try (final ClusterDescriptor<ClusterID> clusterDescriptor =
@@ -73,9 +74,10 @@ public class AbstractSessionClusterExecutor<
 
             final ClusterClientProvider<ClusterID> clusterClientProvider =
                     clusterDescriptor.retrieve(clusterID);
+            //@mark: ClusterClient实现类：MiniClusterClient、RestClusterClient
             ClusterClient<ClusterID> clusterClient = clusterClientProvider.getClusterClient();
             return clusterClient
-                    .submitJob(jobGraph)
+                    .submitJob(jobGraph) //提交job，常用RestClusterClient
                     .thenApplyAsync(
                             FunctionUtils.uncheckedFunction(
                                     jobId -> {

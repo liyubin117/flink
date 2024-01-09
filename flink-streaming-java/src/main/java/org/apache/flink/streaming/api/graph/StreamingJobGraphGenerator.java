@@ -156,7 +156,7 @@ public class StreamingJobGraphGenerator {
 
         jobGraph = new JobGraph(jobID, streamGraph.getJobName());
     }
-
+    //@mark: StreamGraph转换成JobGraph的核心逻辑
     private JobGraph createJobGraph() {
         preValidate();
 
@@ -167,6 +167,7 @@ public class StreamingJobGraphGenerator {
 
         // Generate deterministic hashes for the nodes in order to identify them across
         // submission iff they didn't change.
+        //@mark: 为每个StreamNode生成一个hash值
         Map<Integer, byte[]> hashes =
                 defaultStreamGraphHasher.traverseStreamGraphAndGenerateHashes(streamGraph);
 
@@ -175,7 +176,7 @@ public class StreamingJobGraphGenerator {
         for (StreamGraphHasher hasher : legacyStreamGraphHashers) {
             legacyHashes.add(hasher.traverseStreamGraphAndGenerateHashes(streamGraph));
         }
-
+        //@mark: 关键步骤，将可chain的算子合成一个JobVertex
         setChaining(hashes, legacyHashes);
 
         setPhysicalEdges();
@@ -360,7 +361,7 @@ public class StreamingJobGraphGenerator {
                     chainEntryPoints);
         }
     }
-
+    //@mark: 递归方法
     private List<StreamEdge> createChain(
             final Integer currentNodeId,
             final int chainIndex,
@@ -371,12 +372,13 @@ public class StreamingJobGraphGenerator {
         if (!builtVertices.contains(startNodeId)) {
 
             List<StreamEdge> transitiveOutEdges = new ArrayList<StreamEdge>();
-
+            //@mark: 可chain的StreamNode
             List<StreamEdge> chainableOutputs = new ArrayList<StreamEdge>();
+            //@mark: 不可chain的StreamNode
             List<StreamEdge> nonChainableOutputs = new ArrayList<StreamEdge>();
 
             StreamNode currentNode = streamGraph.getStreamNode(currentNodeId);
-
+            //@mark: 遍历当前StreamNode的出边，判断是否可chain，也即当前节点是否可与直接下游chain
             for (StreamEdge outEdge : currentNode.getOutEdges()) {
                 if (isChainable(outEdge, streamGraph)) {
                     chainableOutputs.add(outEdge);
@@ -384,7 +386,7 @@ public class StreamingJobGraphGenerator {
                     nonChainableOutputs.add(outEdge);
                 }
             }
-
+            //@mark: 递归，把可chain的StreamNode chain在一起，若进一步递归后仍可chain则chainIndex+1
             for (StreamEdge chainable : chainableOutputs) {
                 transitiveOutEdges.addAll(
                         createChain(
@@ -393,7 +395,7 @@ public class StreamingJobGraphGenerator {
                                 chainInfo,
                                 chainEntryPoints));
             }
-
+            //@mark: 递归，若不可chain则chainIndex从0开始
             for (StreamEdge nonChainable : nonChainableOutputs) {
                 transitiveOutEdges.add(nonChainable);
                 createChain(
@@ -429,7 +431,7 @@ public class StreamingJobGraphGenerator {
                 getOrCreateFormatContainer(startNodeId)
                         .addOutputFormat(currentOperatorId, currentNode.getOutputFormat());
             }
-
+            //@mark: 如果当前节点是chain的起始节点，则直接创建JobVertex并返回StreamConfig，若不是则说明是chain的后续节点
             StreamConfig config =
                     currentNodeId.equals(startNodeId)
                             ? createJobVertex(startNodeId, chainInfo)
@@ -847,23 +849,23 @@ public class StreamingJobGraphGenerator {
                                 + streamGraph.getGlobalDataExchangeMode());
         }
     }
-
+    //@mark: 判断是否可chain
     public static boolean isChainable(StreamEdge edge, StreamGraph streamGraph) {
         StreamNode downStreamVertex = streamGraph.getTargetVertex(edge);
-
+        //@mark: 此边的下游节点只有一个入边，且上下游节点可chain
         return downStreamVertex.getInEdges().size() == 1 && isChainableInput(edge, streamGraph);
     }
 
     private static boolean isChainableInput(StreamEdge edge, StreamGraph streamGraph) {
         StreamNode upStreamVertex = streamGraph.getSourceVertex(edge);
         StreamNode downStreamVertex = streamGraph.getTargetVertex(edge);
-
-        if (!(upStreamVertex.isSameSlotSharingGroup(downStreamVertex)
-                && areOperatorsChainable(upStreamVertex, downStreamVertex, streamGraph)
-                && (edge.getPartitioner() instanceof ForwardPartitioner)
-                && edge.getShuffleMode() != ShuffleMode.BATCH
-                && upStreamVertex.getParallelism() == downStreamVertex.getParallelism()
-                && streamGraph.isChainingEnabled())) {
+        //@mark: 需要同时满足如下6个条件
+        if (!(upStreamVertex.isSameSlotSharingGroup(downStreamVertex) //上下游节点在同一个slot sharing group
+                && areOperatorsChainable(upStreamVertex, downStreamVertex, streamGraph) //基于上下游节点对应的算子的chain策略判断可chain
+                && (edge.getPartitioner() instanceof ForwardPartitioner) //使用ForwardPartitioner转发策略
+                && edge.getShuffleMode() != ShuffleMode.BATCH //此边未使用Batch shuffle策略
+                && upStreamVertex.getParallelism() == downStreamVertex.getParallelism() //上下游节点并行度一样
+                && streamGraph.isChainingEnabled())) { //开启chain，由pipeline.operator-chaining配置
 
             return false;
         }
@@ -899,7 +901,7 @@ public class StreamingJobGraphGenerator {
         // we use switch/case here to make sure this is exhaustive if ever values are added to the
         // ChainingStrategy enum
         boolean isChainable;
-
+        //@mark: 上游算子的chain策略是ALWARYS, HEAD, HEAD_WITH_SOURCES
         switch (upStreamOperator.getChainingStrategy()) {
             case NEVER:
                 isChainable = false;
@@ -913,7 +915,7 @@ public class StreamingJobGraphGenerator {
                 throw new RuntimeException(
                         "Unknown chaining strategy: " + upStreamOperator.getChainingStrategy());
         }
-
+        //@mark: 下游算子的chain策略是ALWARYS, HEAD_WITH_SOURCES(仅当上游是source时)
         switch (downStreamOperator.getChainingStrategy()) {
             case NEVER:
             case HEAD:

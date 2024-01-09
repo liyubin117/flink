@@ -76,7 +76,7 @@ public abstract class SimpleTransformationTranslator<OUT, T extends Transformati
      */
     protected abstract Collection<Integer> translateForBatchInternal(
             final T transformation, final Context context);
-
+    //@mark: 转换Transformation，返回一组本StreamNode id的集合
     /**
      * Translates a given {@link Transformation} to its runtime implementation for STREAMING-style
      * execution.
