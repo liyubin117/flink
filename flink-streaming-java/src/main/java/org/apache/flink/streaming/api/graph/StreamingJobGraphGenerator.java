@@ -586,7 +586,7 @@ public class StreamingJobGraphGenerator {
 
         jobVertex.setResources(
                 chainedMinResources.get(streamNodeId), chainedPreferredResources.get(streamNodeId));
-
+        //@mark: 定义该JobVertex的启动类
         jobVertex.setInvokableClass(streamNode.getJobVertexClass());
 
         int parallelism = streamNode.getParallelism();

@@ -244,6 +244,9 @@ public class SingleInputGate extends IndexedInputGate {
         return inputChannelsWithData;
     }
 
+    /**
+     * @mark: 发送数据的过程由netty支持，具体由InputChannel实现，发送数据的规则即发到哪，由StreamPartitioner决定
+     */
     @Override
     public void setup() throws IOException {
         checkState(

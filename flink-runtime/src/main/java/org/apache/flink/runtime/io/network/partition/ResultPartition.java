@@ -146,8 +146,9 @@ public abstract class ResultPartition implements ResultPartitionWriter {
         checkState(
                 this.bufferPool == null,
                 "Bug in result partition setup logic: Already registered buffer pool.");
-
+        //@mark: 获取BufferPool内存管理：每次从堆内存申请的是一个32k的MemorySegment，管理这些MemorySegment的就是BufferPool
         this.bufferPool = checkNotNull(bufferPoolFactory.get());
+        //@mark: 向ResultPartitionManager注册该ResultPartition，一个ResultPartitionManager管理当前tm所有的ResultPartition
         partitionManager.registerResultPartition(this);
     }
 

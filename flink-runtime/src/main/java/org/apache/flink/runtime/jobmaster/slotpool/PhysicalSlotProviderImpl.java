@@ -58,7 +58,7 @@ public class PhysicalSlotProviderImpl implements PhysicalSlotProvider {
                 "Received slot request [{}] with resource requirements: {}",
                 slotRequestId,
                 resourceProfile);
-
+        //@mark: 先从SlotPool拿到可用的slot
         Optional<PhysicalSlot> availablePhysicalSlot =
                 tryAllocateFromAvailable(slotRequestId, slotProfile);
 
@@ -68,6 +68,7 @@ public class PhysicalSlotProviderImpl implements PhysicalSlotProvider {
                         .map(CompletableFuture::completedFuture)
                         .orElseGet(
                                 () ->
+                                        //@mark: 如果没有可用的slot，再调用SlotPoolImpl向ResourceManager申请一个新的slot
                                         requestNewSlot(
                                                 slotRequestId,
                                                 resourceProfile,

@@ -209,6 +209,7 @@ class SlotSharingExecutionSlotAllocator implements ExecutionSlotAllocator {
                     SlotProfile slotProfile =
                             sharedSlotProfileRetriever.getSlotProfile(
                                     group, physicalSlotResourceProfile);
+                    //@mark: 构造申请物理slot请求
                     PhysicalSlotRequest physicalSlotRequest =
                             new PhysicalSlotRequest(
                                     physicalSlotRequestId,

@@ -153,7 +153,7 @@ public class RemoteInputChannel extends InputChannel {
         checkState(
                 bufferManager.unsynchronizedGetAvailableExclusiveBuffers() == 0,
                 "Bug in input channel setup logic: exclusive buffers have already been set for this input channel.");
-
+        //@mark: 分配NetworkBuffer
         bufferManager.requestExclusiveBuffers(initialCredit);
     }
 

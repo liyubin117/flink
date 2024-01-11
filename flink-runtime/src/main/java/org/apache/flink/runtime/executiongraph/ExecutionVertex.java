@@ -711,6 +711,7 @@ public class ExecutionVertex
     }
 
     public void deploy() throws JobException {
+        //@mark: Execution#deploy
         currentExecution.deploy();
     }
 

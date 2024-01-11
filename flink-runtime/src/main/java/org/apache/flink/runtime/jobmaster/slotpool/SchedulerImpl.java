@@ -185,7 +185,7 @@ public class SchedulerImpl implements Scheduler {
     }
 
     // ---------------------------
-
+    //@mark: 通过SlotPool申请新的slot
     @Nonnull
     private CompletableFuture<PhysicalSlot> requestNewAllocatedSlot(
             SlotRequestId slotRequestId,
@@ -233,10 +233,11 @@ public class SchedulerImpl implements Scheduler {
             SlotProfile slotProfile,
             @Nullable Time allocationTimeout) {
         // allocate slot with slot sharing
+        //@mark: 如果未指定slotSharingGroupId，那么此任务独占slot，如果指定则共享slot
         final SlotSharingManager multiTaskSlotManager =
                 slotSharingManagers.computeIfAbsent(
                         scheduledUnit.getSlotSharingGroupId(),
-                        id -> new SlotSharingManager(id, slotPool, this));
+                        id -> new SlotSharingManager(id, slotPool, this)); //此处是创建新的SlotSharingManager对象并加到map
 
         final SlotSharingManager.MultiTaskSlotLocality multiTaskSlotLocality;
         try {

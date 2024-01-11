@@ -139,7 +139,7 @@ public abstract class ResourceManager<WorkerType extends ResourceIDRetrievable>
 
     /** Fatal error handler. */
     private final FatalErrorHandler fatalErrorHandler;
-
+    //@mark: 管理所有可用的slot，实现是SlotManagerImpl
     /** The slot manager maintains the available slots. */
     private final SlotManager slotManager;
 
@@ -514,7 +514,7 @@ public abstract class ResourceManager<WorkerType extends ResourceIDRetrievable>
             closeJobManagerConnection(jobId, cause);
         }
     }
-
+    //@mark: 处理JobMaster SlotPool的slot申请
     @Override
     public CompletableFuture<Acknowledge> requestSlot(
             JobMasterId jobMasterId, SlotRequest slotRequest, final Time timeout) {
@@ -523,6 +523,7 @@ public abstract class ResourceManager<WorkerType extends ResourceIDRetrievable>
         JobManagerRegistration jobManagerRegistration = jobManagerRegistrations.get(jobId);
 
         if (null != jobManagerRegistration) {
+            //@mark: 判断请求里的jobMasterId是否和注册的jobMasterId一致，一致则处理slot申请，不一致则放弃，防止JobMaster切换导致申请了双倍资源导致资源浪费
             if (Objects.equals(jobMasterId, jobManagerRegistration.getJobMasterId())) {
                 log.info(
                         "Request slot with profile {} for job {} with allocation id {}.",
@@ -531,6 +532,7 @@ public abstract class ResourceManager<WorkerType extends ResourceIDRetrievable>
                         slotRequest.getAllocationId());
 
                 try {
+                    //@mark: SlotManager处理slot申请
                     slotManager.registerSlotRequest(slotRequest);
                 } catch (ResourceManagerException e) {
                     return FutureUtils.completedExceptionally(e);
@@ -1395,6 +1397,7 @@ public abstract class ResourceManager<WorkerType extends ResourceIDRetrievable>
         @Override
         public boolean allocateResource(WorkerResourceSpec workerResourceSpec) {
             validateRunsInMainThread();
+            //@mark: 启动新的tm
             return startNewWorker(workerResourceSpec);
         }
 

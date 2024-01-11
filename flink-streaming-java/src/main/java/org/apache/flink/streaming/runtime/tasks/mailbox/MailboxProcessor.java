@@ -183,11 +183,12 @@ public class MailboxProcessor implements Closeable {
         assert localMailbox.getState() == TaskMailbox.State.OPEN : "Mailbox must be opened!";
 
         final MailboxController defaultActionContext = new MailboxController(this);
-
+        //@mark: 只要mailbox循环还在运行，就一直执行
         while (isMailboxLoopRunning()) {
             // The blocking `processMail` call will not return until default action is available.
             processMail(localMailbox, false);
             if (isMailboxLoopRunning()) {
+                //@mark: 执行本Task的processInput
                 mailboxDefaultAction.runDefaultAction(
                         defaultActionContext); // lock is acquired inside default action as needed
             }

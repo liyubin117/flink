@@ -159,7 +159,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
     private final FatalErrorHandler fatalErrorHandler;
 
     private final ClassLoader userCodeLoader;
-
+    //@mark: JobMaster在此处管理申请到的slot，slot可共享，执行任务前先从slotPool申请，若没有则向ResourceManager申请
     private final SlotPool slotPool;
 
     private final SchedulerNGFactory schedulerNGFactory;
@@ -608,7 +608,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
             return FutureUtils.completedExceptionally(e);
         }
     }
-
+    //@mark: JobMaster
     @Override
     public CompletableFuture<Collection<SlotOffer>> offerSlots(
             final ResourceID taskManagerId, final Collection<SlotOffer> slots, final Time timeout) {
@@ -626,7 +626,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
 
         final RpcTaskManagerGateway rpcTaskManagerGateway =
                 new RpcTaskManagerGateway(taskExecutorGateway, getFencingToken());
-
+        //@mark: JobMaster经过一系列的申请动作，ResourceManager把某个TaskExecutor上的某些slot分配给当前JobMaster，由当前JobMaster的SlotPool来管理这些slot
         return CompletableFuture.completedFuture(
                 slotPool.offerSlots(taskManagerLocation, rpcTaskManagerGateway, slots));
     }

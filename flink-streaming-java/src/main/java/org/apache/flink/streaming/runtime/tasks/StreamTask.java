@@ -180,6 +180,7 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>> extends Ab
     protected final StreamConfig configuration;
 
     /** Our state backend. We use this to create checkpoint streams and a keyed state backend. */
+    //@mark: 状态后端，一般使用FSStateBackend
     protected final StateBackend stateBackend;
 
     private final SubtaskCheckpointCoordinator subtaskCheckpointCoordinator;
@@ -215,7 +216,7 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>> extends Ab
 
     /** Thread pool for async snapshot workers. */
     private final ExecutorService asyncOperationsThreadPool;
-
+    //@mark: 创建RecordWriter，用于写到ResultPartition。通常是ChannelSelectorRecordWriter，也可能是BroadcastRecordWriter（比如广播barrier）
     private final RecordWriterDelegate<SerializationDelegate<StreamRecord<OUT>>> recordWriter;
 
     protected final MailboxProcessor mailboxProcessor;
@@ -304,6 +305,7 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>> extends Ab
         this.configuration = new StreamConfig(getTaskConfiguration());
         this.recordWriter = createRecordWriterDelegate(configuration, environment);
         this.actionExecutor = Preconditions.checkNotNull(actionExecutor);
+        //@mark: 类似Akka使用mailbox方式，处理输入 StreamTask#processInput
         this.mailboxProcessor = new MailboxProcessor(this::processInput, mailbox, actionExecutor);
         this.mailboxProcessor.initMetric(environment.getMetricGroup());
         this.mainMailboxExecutor = mailboxProcessor.getMainMailboxExecutor();
@@ -316,7 +318,7 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>> extends Ab
 
         this.subtaskCheckpointCoordinator =
                 new SubtaskCheckpointCoordinatorImpl(
-                        stateBackend.createCheckpointStorage(getEnvironment().getJobID()),
+                        stateBackend.createCheckpointStorage(getEnvironment().getJobID()), //@mark: 通过StateBackend创建CheckpointStorage，使用FSStateBackend创建的是FSCheckpointStorage
                         getName(),
                         actionExecutor,
                         getCancelables(),
@@ -546,6 +548,7 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>> extends Ab
                     channelIOExecutor.execute(
                             () -> {
                                 try {
+                                    //@mark: 该Task读InputGate数据
                                     reader.readInputData(getEnvironment().getAllInputGates());
                                 } catch (Exception e) {
                                     asyncExceptionHandler.handleAsyncException(
@@ -577,7 +580,7 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>> extends Ab
                 throw new CancelTaskException();
             }
 
-            // let the task do its work
+            //@mark: 开始工作 let the task do its work
             runMailboxLoop();
 
             // if this left the run() method cleanly despite the fact that this was canceled,
@@ -1220,7 +1223,7 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>> extends Ab
         List<RecordWriter<SerializationDelegate<StreamRecord<OUT>>>> recordWrites =
                 createRecordWriters(configuration, environment);
         if (recordWrites.size() == 1) {
-            return new SingleRecordWriter<>(recordWrites.get(0));
+            return new SingleRecordWriter<>(recordWrites.get(0)); //@mark: 若只有一个writer则生成SingleRecordWriter
         } else if (recordWrites.size() == 0) {
             return new NonRecordWriter<>();
         } else {
@@ -1233,10 +1236,11 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>> extends Ab
                     StreamConfig configuration, Environment environment) {
         List<RecordWriter<SerializationDelegate<StreamRecord<OUT>>>> recordWriters =
                 new ArrayList<>();
+        //@mark: 获取该StreamTask的输出StreamEdge集合
         List<StreamEdge> outEdgesInOrder =
                 configuration.getOutEdgesInOrder(
                         environment.getUserCodeClassLoader().asClassLoader());
-
+        //@mark: 按照out StreamEdge的个数构建多个RecordWriter
         for (int i = 0; i < outEdgesInOrder.size(); i++) {
             StreamEdge edge = outEdgesInOrder.get(i);
             recordWriters.add(
@@ -1263,6 +1267,7 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>> extends Ab
         // Clones the partition to avoid multiple stream edges sharing the same stream partitioner,
         // like the case of https://issues.apache.org/jira/browse/FLINK-14087.
         try {
+            //@mark: 从StreamEdge获取流分区器
             outputPartitioner =
                     InstantiationUtil.clone(
                             (StreamPartitioner<OUT>) edge.getPartitioner(),

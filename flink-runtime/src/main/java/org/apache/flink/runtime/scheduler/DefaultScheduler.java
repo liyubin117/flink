@@ -368,14 +368,15 @@ public class DefaultScheduler extends SchedulerBase implements SchedulerOperatio
         transitionToScheduled(verticesToDeploy);
 
         final List<SlotExecutionVertexAssignment> slotExecutionVertexAssignments =
+                //@mark: 为每个ExecutionVertex分配slot资源
                 allocateSlots(executionVertexDeploymentOptions);
-
+        //@mark: 构建DeploymentHandle
         final List<DeploymentHandle> deploymentHandles =
                 createDeploymentHandles(
                         requiredVersionByVertex,
                         deploymentOptionsByVertex,
                         slotExecutionVertexAssignments);
-
+        //@mark: 等待slot资源分配完成并部署Task运行
         waitForAllSlotsAndDeploy(deploymentHandles);
     }
 
@@ -406,9 +407,11 @@ public class DefaultScheduler extends SchedulerBase implements SchedulerOperatio
 
     private List<SlotExecutionVertexAssignment> allocateSlots(
             final List<ExecutionVertexDeploymentOption> executionVertexDeploymentOptions) {
+        //@mark: 对于不同的调度策略生成对应的slot资源分配器，对于Pipelined Region策略，其对应的slot资源分配器为SlotSharingExecutionSlotAllocator
         return executionSlotAllocator.allocateSlotsFor(
                 executionVertexDeploymentOptions.stream()
                         .map(ExecutionVertexDeploymentOption::getExecutionVertexId)
+                        //@mark: 根据ExecutionVertexID从ExecutionGraph获取ExecutionVertex
                         .map(this::getExecutionVertex)
                         .map(ExecutionVertexSchedulingRequirementsMapper::from)
                         .collect(Collectors.toList()));
@@ -455,6 +458,7 @@ public class DefaultScheduler extends SchedulerBase implements SchedulerOperatio
             final List<DeploymentHandle> deploymentHandles) {
         return (ignored, throwable) -> {
             propagateIfNonNull(throwable);
+            //@mark: 循环遍历所有的ExecutionVertex部署执行
             for (final DeploymentHandle deploymentHandle : deploymentHandles) {
                 final SlotExecutionVertexAssignment slotExecutionVertexAssignment =
                         deploymentHandle.getSlotExecutionVertexAssignment();
@@ -533,7 +537,7 @@ public class DefaultScheduler extends SchedulerBase implements SchedulerOperatio
             return failure;
         }
     }
-
+    //@mark: 部署Task运行
     private BiFunction<Object, Throwable, Void> deployOrHandleError(
             final DeploymentHandle deploymentHandle) {
         final ExecutionVertexVersion requiredVertexVersion =
@@ -550,7 +554,7 @@ public class DefaultScheduler extends SchedulerBase implements SchedulerOperatio
             }
 
             if (throwable == null) {
-                deployTaskSafe(executionVertexId);
+                deployTaskSafe(executionVertexId); //@mark: 若无异常则正常部署Task运行
             } else {
                 handleTaskDeploymentFailure(executionVertexId, throwable);
             }
@@ -561,6 +565,7 @@ public class DefaultScheduler extends SchedulerBase implements SchedulerOperatio
     private void deployTaskSafe(final ExecutionVertexID executionVertexId) {
         try {
             final ExecutionVertex executionVertex = getExecutionVertex(executionVertexId);
+            //@mark: 调用ExecutionVertex#deploy()部署Task运行
             executionVertexOperations.deploy(executionVertex);
         } catch (Throwable e) {
             handleTaskDeploymentFailure(executionVertexId, e);

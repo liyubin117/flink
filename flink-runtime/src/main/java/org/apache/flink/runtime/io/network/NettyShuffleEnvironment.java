@@ -237,6 +237,7 @@ public class NettyShuffleEnvironment
             for (int gateIndex = 0; gateIndex < inputGates.length; gateIndex++) {
                 final InputGateDeploymentDescriptor igdd =
                         inputGateDeploymentDescriptors.get(gateIndex);
+                //@mark: 创建InputGate
                 SingleInputGate inputGate =
                         singleInputGateFactory.create(
                                 ownerContext.getOwnerName(),

@@ -128,6 +128,7 @@ import static org.apache.flink.util.Preconditions.checkState;
  * a completed call is as expected, and trigger correcting actions if it is not. Many actions are
  * also idempotent (like canceling).
  */
+//@mark: ExecutionVertex的单次执行。虽然可以 ExecutionVertex 多次执行（用于恢复、重新计算、重新配置），但此类跟踪该顶点和资源的单次执行的状态
 public class Execution
         implements AccessExecution, Archiveable<ArchivedExecution>, LogicalSlot.Payload {
 
@@ -771,6 +772,7 @@ public class Execution
         // make sure exactly one deployment call happens from the correct state
         // note: the transition from CREATED to DEPLOYING is for testing purposes only
         ExecutionState previous = this.state;
+        //@mark: 如果之前状态是CREATED或者SCHEDULED，那么就可以进行部署，转换成DEPLOYING状态
         if (previous == SCHEDULED || previous == CREATED) {
             if (!transitionState(previous, DEPLOYING)) {
                 // race condition, someone else beat us to the deploying call.
@@ -841,7 +843,7 @@ public class Execution
 
             // null taskRestore to let it be GC'ed
             taskRestore = null;
-
+            //@mark: 获取该LogicalSlot对应的TaskManagerGateway
             final TaskManagerGateway taskManagerGateway = slot.getTaskManagerGateway();
 
             final ComponentMainThreadExecutor jobMasterMainThreadExecutor =
@@ -851,6 +853,7 @@ public class Execution
             // We run the submission in the future executor so that the serialization of large TDDs
             // does not block
             // the main thread and sync back to the main thread once submission is completed.
+            //@mark: JobMaster调用TaskManagerGateway#submitTask()方法，向TaskManager提交Task，最终交由TaskExecutor执行
             CompletableFuture.supplyAsync(
                             () -> taskManagerGateway.submitTask(deployment, rpcTimeout), executor)
                     .thenCompose(Function.identity())

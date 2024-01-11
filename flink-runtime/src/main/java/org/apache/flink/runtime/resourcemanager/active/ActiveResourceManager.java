@@ -246,6 +246,7 @@ public class ActiveResourceManager<WorkerType extends ResourceIDRetrievable>
                 pendingCount);
 
         CompletableFuture<WorkerType> requestResourceFuture =
+                //@mark: 通过ResourceManagerDriver来请求资源，driver有yarn、k8s等
                 resourceManagerDriver.requestResource(taskExecutorProcessSpec);
         FutureUtils.assertNoException(
                 requestResourceFuture.handle(

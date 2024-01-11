@@ -321,8 +321,10 @@ public class SlotPoolImpl implements SlotPool {
             PendingRequest pendingRequest) {
 
         if (resourceManagerGateway == null) {
+            //@mark: 如果还没有可用的rm则先保存slot请求
             stashRequestWaitingForResourceManager(pendingRequest);
         } else {
+            //@mark: 向rm申请slot
             requestSlotFromResourceManager(resourceManagerGateway, pendingRequest);
         }
 
@@ -335,10 +337,10 @@ public class SlotPoolImpl implements SlotPool {
 
         checkNotNull(resourceManagerGateway);
         checkNotNull(pendingRequest);
-
+        //@mark: 给这个slot请求分配一个allocationId，防止网络抖动等情况时重复申请
         final AllocationID allocationId = new AllocationID();
         pendingRequest.setAllocationId(allocationId);
-
+        //@mark: 保存请求
         pendingRequests.put(pendingRequest.getSlotRequestId(), allocationId, pendingRequest);
 
         pendingRequest
@@ -367,6 +369,7 @@ public class SlotPoolImpl implements SlotPool {
                 allocationId);
 
         CompletableFuture<Acknowledge> rmResponse =
+                //@mark: 调用rm rpc gateway requestSlot方法
                 resourceManagerGateway.requestSlot(
                         jobMasterId,
                         new SlotRequest(
@@ -692,7 +695,7 @@ public class SlotPoolImpl implements SlotPool {
             Collection<SlotOffer> offers) {
 
         ArrayList<SlotOffer> result = new ArrayList<>(offers.size());
-
+        //@mark: 将已分配的slot放入SlotPool的AllocatedSlots变量
         for (SlotOffer offer : offers) {
             if (offerSlot(taskManagerLocation, taskManagerGateway, offer)) {
 
@@ -773,7 +776,7 @@ public class SlotPoolImpl implements SlotPool {
                         slotOffer.getSlotIndex(),
                         slotOffer.getResourceProfile(),
                         taskManagerGateway);
-
+        //@mark: 找到pending request，使用已分配的slot尽量满足这些slot请求
         // use the slot to fulfill pending request, in requested order
         tryFulfillSlotRequestOrMakeAvailable(allocatedSlot);
 

@@ -111,7 +111,7 @@ public class ResultPartitionFactory {
                 desc.getMaxParallelism(),
                 createBufferPoolFactory(desc.getNumberOfSubpartitions(), desc.getPartitionType()));
     }
-
+    //@mark: 创建ResultPartition
     @VisibleForTesting
     public ResultPartition create(
             String taskNameWithSubtaskAndId,
@@ -143,7 +143,7 @@ public class ResultPartitionFactory {
                             partitionManager,
                             bufferCompressor,
                             bufferPoolFactory);
-
+            //@mark: 创建ResultSubPartition
             BiFunction<Integer, PipelinedResultPartition, PipelinedSubpartition> factory;
             if (type == ResultPartitionType.PIPELINED_APPROXIMATE) {
                 factory = PipelinedApproximateSubpartition::new;

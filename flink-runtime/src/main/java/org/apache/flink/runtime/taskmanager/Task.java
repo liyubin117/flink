@@ -395,7 +395,7 @@ public class Task
         final ShuffleIOOwnerContext taskShuffleContext =
                 shuffleEnvironment.createShuffleIOOwnerContext(
                         taskNameWithSubtaskAndId, executionId, metrics.getIOMetricGroup());
-
+        //@mark: 由ShuffleEnvironment创建ResultPartitionWriter，写算子的输出结果
         // produced intermediate result partitions
         final ResultPartitionWriter[] resultPartitionWriters =
                 shuffleEnvironment
@@ -410,7 +410,7 @@ public class Task
                         this,
                         jobId,
                         resultPartitionConsumableNotifier);
-
+        //@mark: 由ShuffleEnvironment创建IndexedInputGate，读算子的输入
         // consumed intermediate result partitions
         final IndexedInputGate[] gates =
                 shuffleEnvironment
@@ -433,7 +433,7 @@ public class Task
         }
 
         invokableHasBeenCanceled = new AtomicBoolean(false);
-
+        //@mark: Task本身就是一个线程的包装
         // finally, create the executing thread, but do not start it
         executingThread = new Thread(TASK_THREADS_GROUP, this, taskNameWithSubtask);
     }
@@ -572,7 +572,7 @@ public class Task
             terminationFuture.complete(executionState);
         }
     }
-
+    //@mark: Task逻辑的执行体
     private void doRun() {
         // ----------------------------
         //  Initial State transition
@@ -613,6 +613,8 @@ public class Task
         // all resource acquisitions and registrations from here on
         // need to be undone in the end
         Map<String, Future<Path>> distributedCacheEntries = new HashMap<>();
+        //@mark: 构建ExecutionVertex时会初始化其启动类，slot -> task -> ExecutionVertex -> 启动类
+        //如果StreamOperator是StreamSource，指定该Task的invokableClass为SourceStreamTask，否则是OneInputStreamTask
         AbstractInvokable invokable = null;
 
         try {
@@ -655,7 +657,7 @@ public class Task
             // ----------------------------------------------------------------
 
             LOG.info("Registering task at network: {}.", this);
-
+            //@mark: 启动之前创建好的ResultPartitionWriter和InputGate
             setupPartitionsAndGates(consumableNotifyingPartitionWriters, inputGates);
 
             for (ResultPartitionWriter partitionWriter : consumableNotifyingPartitionWriters) {
@@ -726,6 +728,8 @@ public class Task
             executingThread.setContextClassLoader(userCodeClassLoader.asClassLoader());
 
             // now load and instantiate the task's invokable code
+            //@mark: 通过反射的方式获取该Task对应的启动类。每个StreamNode添加时都有一个JobVertexClass属性，对于一个operator chain，就是head operator对应的类
+            //对于流式任务来说，就是StreamTask的子类，有两种情况：SourceStreamTask、OneInputStreamTask
             invokable =
                     loadAndInstantiateInvokable(
                             userCodeClassLoader.asClassLoader(), nameOfInvokableClass, env);
@@ -740,6 +744,7 @@ public class Task
 
             // switch to the RUNNING state, if that fails, we have been canceled/failed in the
             // meantime
+            //@mark: 把状态从DEPLOYING切换到RUNNING
             if (!transitionState(ExecutionState.DEPLOYING, ExecutionState.RUNNING)) {
                 throw new CancelTaskException();
             }
@@ -751,7 +756,7 @@ public class Task
             // make sure the user code classloader is accessible thread-locally
             executingThread.setContextClassLoader(userCodeClassLoader.asClassLoader());
 
-            // run the invokable
+            //@mark: 执行 run the invokable
             invokable.invoke();
 
             // make sure, we enter the catch block if the task leaves the invoke() method due
@@ -773,6 +778,7 @@ public class Task
 
             // try to mark the task as finished
             // if that fails, the task was canceled/failed in the meantime
+            //@mark: 执行完成后，把状态从RUNNING切换到FINISHED
             if (!transitionState(ExecutionState.RUNNING, ExecutionState.FINISHED)) {
                 throw new CancelTaskException();
             }
@@ -913,13 +919,14 @@ public class Task
     @VisibleForTesting
     public static void setupPartitionsAndGates(
             ResultPartitionWriter[] producedPartitions, InputGate[] inputGates) throws IOException {
-
+        //@mark: 注册当前Task的ResultPartition到当前TaskManager上的用来跟踪ResultPartition的ResultPartitionManager当中
         for (ResultPartitionWriter partition : producedPartitions) {
             partition.setup();
         }
 
         // InputGates must be initialized after the partitions, since during InputGate#setup
         // we are requesting partitions
+        //@mark: 使用BufferManager为当前Task的InputGate的每个InputChannel分配对应的buffer
         for (InputGate gate : inputGates) {
             gate.setup();
         }
@@ -1463,7 +1470,7 @@ public class Task
         } catch (Throwable t) {
             throw new Exception("Could not load the task's invokable class.", t);
         }
-
+        //@mark: 调用StreamTask带Environment入参的构造方法
         Constructor<? extends AbstractInvokable> statelessCtor;
 
         try {

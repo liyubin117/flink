@@ -319,6 +319,7 @@ public class StreamGraph implements Pipeline {
             TypeInformation<IN> inTypeInfo,
             TypeInformation<OUT> outTypeInfo,
             String operatorName) {
+        //@mark: 关键代码，生成该StreamNode的启动类
         Class<? extends AbstractInvokable> invokableClass =
                 operatorFactory.isStreamSource()
                         ? SourceStreamTask.class
@@ -595,6 +596,7 @@ public class StreamGraph implements Pipeline {
 
             // If no partitioner was specified and the parallelism of upstream and downstream
             // operator matches use forward partitioning, use rebalance otherwise.
+            //@mark: 如果未指定分区器，并且上游和下游运算符的并行度相同则使用ForwardPartitioner，否则使用RebalancePartitioner
             if (partitioner == null
                     && upstreamNode.getParallelism() == downstreamNode.getParallelism()) {
                 partitioner = new ForwardPartitioner<Object>();

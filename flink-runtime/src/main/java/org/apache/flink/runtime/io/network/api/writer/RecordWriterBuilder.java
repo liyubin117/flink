@@ -45,6 +45,7 @@ public class RecordWriterBuilder<T extends IOReadableWritable> {
     }
 
     public RecordWriter<T> build(ResultPartitionWriter writer) {
+        //@mark: 根据 ChannelSelector 类型生成不同的 RecordWriter
         if (selector.isBroadcast()) {
             return new BroadcastRecordWriter<>(writer, timeout, taskName);
         } else {

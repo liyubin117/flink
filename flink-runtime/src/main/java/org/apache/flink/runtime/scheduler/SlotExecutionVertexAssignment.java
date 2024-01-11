@@ -25,7 +25,14 @@ import org.apache.flink.runtime.scheduler.strategy.ExecutionVertexID;
 import java.util.concurrent.CompletableFuture;
 
 import static org.apache.flink.util.Preconditions.checkNotNull;
-
+/**
+ * @mark: ExecutionVertex与分配的slot的对应关系
+ * 申请slot过程中有两种关于slot的抽象：
+ * 1. LogicalSlot 逻辑slot
+ * 2. PhysicalSlot 物理slot
+ * 共享slot的机制，可能存在多个Task共用slot的情况
+ * 每个去申请slot的Task，都会申请到一个LogicalSlot，有可能多个任务申请到的LogicalSlot是同一个PhysicalSlot
+ */
 /** The slot assignment for a {@link ExecutionVertex}. */
 class SlotExecutionVertexAssignment {
 

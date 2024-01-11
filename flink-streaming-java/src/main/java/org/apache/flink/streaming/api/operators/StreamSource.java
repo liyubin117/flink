@@ -65,7 +65,7 @@ public class StreamSource<OUT, SRC extends SourceFunction<OUT>>
 
         run(lockingObject, streamStatusMaintainer, output, operatorChain);
     }
-
+    //@mark: 从源端读数据
     public void run(
             final Object lockingObject,
             final StreamStatusMaintainer streamStatusMaintainer,
@@ -107,6 +107,7 @@ public class StreamSource<OUT, SRC extends SourceFunction<OUT>>
                         -1);
 
         try {
+            //@mark: 调用StreamSource operator中的自定义的读方法
             userFunction.run(ctx);
 
             // if we get here, then the user function either exited after being done (finite source)

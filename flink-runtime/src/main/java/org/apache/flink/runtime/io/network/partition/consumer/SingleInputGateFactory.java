@@ -130,7 +130,7 @@ public class SingleInputGateFactory {
                         bufferDecompressor,
                         networkBufferPool,
                         networkBufferSize);
-
+        //@mark: 创建InputChannel
         createInputChannels(owningTaskName, igdd, inputGate, metrics);
         return inputGate;
     }
@@ -202,6 +202,7 @@ public class SingleInputGateFactory {
             ChannelStatistics channelStatistics,
             InputChannelMetrics metrics) {
         ResultPartitionID partitionId = inputChannelDescriptor.getResultPartitionID();
+        //@mark: 如果InputChannel在本TaskExecutor上，那就创建LocalRecoveredInputChannel
         if (inputChannelDescriptor.isLocalTo(taskExecutorResourceId)) {
             // Consuming task is deployed to the same TaskManager as the partition => local
             channelStatistics.numLocalChannels++;

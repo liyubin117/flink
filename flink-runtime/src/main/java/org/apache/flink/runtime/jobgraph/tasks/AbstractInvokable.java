@@ -33,7 +33,7 @@ import java.io.IOException;
 import java.util.concurrent.Future;
 
 import static org.apache.flink.util.Preconditions.checkNotNull;
-
+//@mark: 所有Task的父类
 /**
  * This is the abstract base class for every task that can be executed by a TaskManager. Concrete
  * tasks extend this class, for example the streaming and batch tasks.

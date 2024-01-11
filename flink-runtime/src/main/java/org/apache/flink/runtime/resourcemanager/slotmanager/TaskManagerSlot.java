@@ -31,7 +31,7 @@ import javax.annotation.Nullable;
 import java.util.Objects;
 
 import static org.apache.flink.util.Preconditions.checkNotNull;
-
+//@mark: 包含了tm连接信息、slotId
 /**
  * A TaskManagerSlot represents a slot located in a TaskManager. It has a unique identification and
  * resource profile associated.

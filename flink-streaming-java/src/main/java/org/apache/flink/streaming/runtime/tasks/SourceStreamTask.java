@@ -50,6 +50,7 @@ import java.util.concurrent.Future;
  * @param <SRC> Type of the source function for the stream source operator
  * @param <OP> Type of the stream source operator
  */
+//@mark: 用于执行 StreamSource 的 StreamTask
 @Internal
 public class SourceStreamTask<
                 OUT, SRC extends SourceFunction<OUT>, OP extends StreamSource<OUT, SRC>>
@@ -77,6 +78,7 @@ public class SourceStreamTask<
                 FatalExitExceptionHandler.INSTANCE,
                 StreamTaskActionExecutor.synchronizedExecutor(lock));
         this.lock = Preconditions.checkNotNull(lock);
+        //@mark: 初始化一个LegacySourceFunctionThread线程，source读取数据的线程
         this.sourceThread = new LegacySourceFunctionThread();
     }
 
@@ -144,7 +146,7 @@ public class SourceStreamTask<
 
     @Override
     protected void processInput(MailboxDefaultAction.Controller controller) throws Exception {
-
+        //@mark: 暂停当前线程，因为该方法是在父类初始化时执行，而子类才初始化sourceThread，当执行到此处时子类还未初始化，因此要暂停
         controller.suspendDefaultAction();
 
         // Against the usual contract of this method, this implementation is not step-wise but
@@ -260,6 +262,7 @@ public class SourceStreamTask<
         @Override
         public void run() {
             try {
+                //@mark: 调用StreamSource#run，开始了执行StreamSource operator的任务
                 mainOperator.run(lock, getStreamStatusMaintainer(), operatorChain);
                 if (!wasStoppedExternally && !isCanceled()) {
                     synchronized (lock) {

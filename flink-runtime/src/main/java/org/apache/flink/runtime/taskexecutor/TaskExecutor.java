@@ -217,7 +217,7 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
     private final Executor ioExecutor;
 
     // --------- task slot allocation table -----------
-
+    //@mark: TaskSlot 一个Job包含了哪些task，分配了哪些slot；TaskSlotTable 管理本tm上所有的TaskSlot
     private final TaskSlotTable<Task> taskSlotTable;
 
     private final JobTable jobTable;
@@ -544,6 +544,7 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
             final JobTable.Connection jobManagerConnection =
                     jobTable.getConnection(jobId)
                             .orElseThrow(
+                                    //@mark: 检查和JobMaster的连接
                                     () -> {
                                         final String message =
                                                 "Could not submit task because there is no JobManager "
@@ -554,7 +555,7 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
                                         log.debug(message);
                                         return new TaskSubmissionException(message);
                                     });
-
+            //@mark: 检查已有的active JobMaster的连接是否是提交请求的JobMaster
             if (!Objects.equals(jobManagerConnection.getJobMasterId(), jobMasterId)) {
                 final String message =
                         "Rejecting the task submission because the job manager leader id "
@@ -585,7 +586,7 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
                 throw new TaskSubmissionException(
                         "Could not re-integrate offloaded TaskDeploymentDescriptor data.", e);
             }
-
+            //@mark: 反序列化出job和task信息
             // deserialize the pre-serialized information
             final JobInformation jobInformation;
             final TaskInformation taskInformation;
@@ -619,7 +620,7 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
                             taskInformation.getTaskName(),
                             tdd.getSubtaskIndex(),
                             tdd.getAttemptNumber());
-
+            //@mark: 初始化RpcInputSplitProvider
             InputSplitProvider inputSplitProvider =
                     new RpcInputSplitProvider(
                             jobManagerConnection.getJobManagerGateway(),
@@ -651,9 +652,9 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
                             tdd.getAllocationId(),
                             taskInformation.getJobVertexId(),
                             tdd.getSubtaskIndex());
-
+            //@mark: 来自jm的用于恢复一个task的信息
             final JobManagerTaskRestore taskRestore = tdd.getTaskRestore();
-
+            //@mark: 初始化TaskStateManagerImpl task状态管理
             final TaskStateManager taskStateManager =
                     new TaskStateManagerImpl(
                             jobId,
@@ -661,14 +662,14 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
                             localStateStore,
                             taskRestore,
                             checkpointResponder);
-
+            //@mark: 获取MemoryManager
             MemoryManager memoryManager;
             try {
                 memoryManager = taskSlotTable.getTaskMemoryManager(tdd.getAllocationId());
             } catch (SlotNotFoundException e) {
                 throw new TaskSubmissionException("Could not submit task.", e);
             }
-
+            //@mark: tdd -> Task
             Task task =
                     new Task(
                             jobInformation,
@@ -677,11 +678,11 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
                             tdd.getAllocationId(),
                             tdd.getSubtaskIndex(),
                             tdd.getAttemptNumber(),
-                            tdd.getProducedPartitions(),
-                            tdd.getInputGates(),
+                            tdd.getProducedPartitions(), //@mark: 本Task的输出
+                            tdd.getInputGates(),  //@mark: 本Task的输入
                             tdd.getTargetSlotNumber(),
                             memoryManager,
-                            taskExecutorServices.getIOManager(),
+                            taskExecutorServices.getIOManager(),  //@mark: 初始化TaskExecutor时已经创建
                             taskExecutorServices.getShuffleEnvironment(),
                             taskExecutorServices.getKvStateService(),
                             taskExecutorServices.getBroadcastVariableManager(),
@@ -709,6 +710,7 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
                     tdd.getExecutionAttemptId(),
                     tdd.getAllocationId());
 
+            //@mark: 将提交的Task注册到TaskSlotTable
             boolean taskAdded;
 
             try {
@@ -718,6 +720,7 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
             }
 
             if (taskAdded) {
+                //@mark: 启动Task线程执行，执行Task#run方法
                 task.startTaskThread();
 
                 setupResultPartitionBookkeeping(
@@ -1013,7 +1016,7 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
                 allocationId,
                 jobId,
                 resourceManagerId);
-
+        //@mark: 检测本tm注册的rm地址与请求的rm地址是否一致
         if (!isConnectedToResourceManager(resourceManagerId)) {
             final String message =
                     String.format(
@@ -1056,7 +1059,7 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
             return FutureUtils.completedExceptionally(
                     new SlotAllocationException("Could not create new job.", e));
         }
-        //@mark: 若某job已连接上，则提供slot给jm
+        //@mark: 若本TaskExecutor生成的job已连接上JobMaster，则提供slot给jm
         if (job.isConnected()) {
             offerSlotsToJobManager(jobId);
         }
@@ -1069,7 +1072,7 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
         jobLeaderService.addJob(jobId, targetAddress);
         final PermanentBlobCache permanentBlobService = blobCacheService.getPermanentBlobService();
         permanentBlobService.registerJob(jobId);
-
+        //@mark: 创建TaskExecutorJobServices，用于管理job相关的服务
         return TaskExecutorJobServices.create(
                 libraryCacheManager.registerClassLoaderLease(jobId),
                 () -> permanentBlobService.releaseJob(jobId));
@@ -1078,6 +1081,7 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
     private void allocateSlot(
             SlotID slotId, JobID jobId, AllocationID allocationId, ResourceProfile resourceProfile)
             throws SlotAllocationException {
+        //@mark: 如果该slot空闲则分配
         if (taskSlotTable.isSlotFree(slotId.getSlotNumber())) {
             if (taskSlotTable.allocateSlot(
                     slotId.getSlotNumber(),
@@ -1434,7 +1438,7 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
 
         if (taskSlotTable.hasAllocatedSlots(jobId)) {
             log.info("Offer reserved slots to the leader of job {}.", jobId);
-
+            //@mark: 获取JobMaster rpc gateway
             final JobMasterGateway jobMasterGateway = jobManagerConnection.getJobManagerGateway();
 
             final Iterator<TaskSlot<Task>> reservedSlotsIterator =
@@ -1442,16 +1446,16 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
             final JobMasterId jobMasterId = jobManagerConnection.getJobMasterId();
 
             final Collection<SlotOffer> reservedSlots = new HashSet<>(2);
-
+            //@mark: 根据已分配的slot，生成SlotOffer
             while (reservedSlotsIterator.hasNext()) {
                 SlotOffer offer = reservedSlotsIterator.next().generateSlotOffer();
                 reservedSlots.add(offer);
             }
-
+            //@mark: 向JobMaster提供slot
             CompletableFuture<Collection<SlotOffer>> acceptedSlotsFuture =
                     jobMasterGateway.offerSlots(
                             getResourceID(), reservedSlots, taskManagerConfiguration.getTimeout());
-
+            //@mark: 处理JobMaster的响应
             acceptedSlotsFuture.whenCompleteAsync(
                     handleAcceptedSlotOffers(jobId, jobMasterGateway, jobMasterId, reservedSlots),
                     getMainThreadExecutor());
@@ -1472,6 +1476,7 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
                     log.info(
                             "Slot offering to JobManager did not finish in time. Retrying the slot offering.");
                     // We ran into a timeout. Try again.
+                    //@mark: 若超时则重试
                     offerSlotsToJobManager(jobId);
                 } else {
                     log.warn(
@@ -1480,11 +1485,13 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
                             throwable);
 
                     // We encountered an exception. Free the slots and return them to the RM.
+                    //@mark: 若失败则释放slot
                     for (SlotOffer reservedSlot : offeredSlots) {
                         freeSlotInternal(reservedSlot.getAllocationId(), throwable);
                     }
                 }
             } else {
+                //@mark: 已经成功向JobMaster提供slot，更新slot状态为ACTIVE
                 // check if the response is still valid
                 if (isJobManagerConnectionValid(jobId, jobMasterId)) {
                     // mark accepted slots active
@@ -1492,6 +1499,7 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
                         final AllocationID allocationId = acceptedSlot.getAllocationId();
                         try {
                             if (!taskSlotTable.markSlotActive(allocationId)) {
+                                //@mark: 若更新slot状态为ACTIVE失败，则向JobMaster报告失败
                                 // the slot is either free or releasing at the moment
                                 final String message =
                                         "Could not mark slot " + allocationId + " active.";
@@ -1508,7 +1516,7 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
 
                         offeredSlots.remove(acceptedSlot);
                     }
-
+                    //@mark: 若有slot被JobMaster拒绝响应，则释放slot
                     final Exception e = new Exception("The slot was rejected by the JobManager.");
 
                     for (SlotOffer rejectedSlot : offeredSlots) {

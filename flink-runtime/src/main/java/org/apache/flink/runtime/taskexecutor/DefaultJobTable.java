@@ -196,7 +196,7 @@ public final class DefaultJobTable implements JobTable {
                 return Optional.empty();
             }
         }
-
+        //@mark: TaskExecutor连接JobMaster
         @Override
         public JobTable.Connection connect(
                 ResourceID resourceId,
