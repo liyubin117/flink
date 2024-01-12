@@ -135,7 +135,7 @@ public class GroupAggFunction extends KeyedProcessFunction<RowData, RowData, Row
                 return;
             }
             firstRow = true;
-            accumulators = function.createAccumulators();
+            accumulators = function.createAccumulators(); //@mark: 累计器初始化
         } else {
             firstRow = false;
         }
@@ -154,7 +154,7 @@ public class GroupAggFunction extends KeyedProcessFunction<RowData, RowData, Row
             function.retract(input);
         }
         // get current aggregate result
-        RowData newAggValue = function.getValue();
+        RowData newAggValue = function.getValue(); //@mark: 新的聚合值
 
         // get accumulator
         accumulators = function.getAccumulators();
@@ -163,7 +163,7 @@ public class GroupAggFunction extends KeyedProcessFunction<RowData, RowData, Row
             // we aggregated at least one record for this key
 
             // update the state
-            accState.update(accumulators);
+            accState.update(accumulators); //@mark: 更新聚合状态
 
             // if this was not the first row and we have to emit retractions
             if (!firstRow) {
@@ -173,7 +173,7 @@ public class GroupAggFunction extends KeyedProcessFunction<RowData, RowData, Row
                     // If state cleaning is enabled, we have to emit messages to prevent too early
                     // state eviction of downstream operators.
                     return;
-                } else {
+                } else { //@mark: update操作
                     // retract previous result
                     if (generateUpdateBefore) {
                         // prepare UPDATE_BEFORE message for previous row
@@ -185,13 +185,13 @@ public class GroupAggFunction extends KeyedProcessFunction<RowData, RowData, Row
                     // prepare UPDATE_AFTER message for new row
                     resultRow.replace(currentKey, newAggValue).setRowKind(RowKind.UPDATE_AFTER);
                 }
-            } else {
+            } else { //@mark: 如果是该key的第一行，则视为insert操作
                 // this is the first, output new result
                 // prepare INSERT message for new row
                 resultRow.replace(currentKey, newAggValue).setRowKind(RowKind.INSERT);
             }
 
-            out.collect(resultRow);
+            out.collect(resultRow); //@mark: RecordWriterOutput输出
 
         } else {
             // we retracted the last record for this key

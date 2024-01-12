@@ -146,7 +146,7 @@ public abstract class InputChannel {
     }
 
     public void notifyPriorityEvent(int priorityBufferNumber) {
-        inputGate.notifyPriorityEvent(this, priorityBufferNumber);
+        inputGate.notifyPriorityEvent(this, priorityBufferNumber); //@mark: 通知InputGate调用SingleInputChannel
     }
 
     protected void notifyBufferAvailable(int numAvailableBuffers) throws IOException {}

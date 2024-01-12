@@ -23,6 +23,7 @@ import org.apache.flink.runtime.io.network.partition.consumer.InputGate;
 import java.io.IOException;
 
 /** Reads channel state saved during checkpoint/savepoint. */
+//@mark: 读取checkpoint/savepoint中保存的channel state
 @Internal
 public interface SequentialChannelStateReader extends AutoCloseable {
 

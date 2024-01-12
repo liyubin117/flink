@@ -183,12 +183,12 @@ public class OneInputStreamTask<IN, OUT> extends StreamTask<OUT, OneInputStreamO
             this.watermarkGauge = checkNotNull(watermarkGauge);
             this.numRecordsIn = checkNotNull(numRecordsIn);
         }
-
+        //@mark: 被StreamTaskNetworkInput#processElement调用
         @Override
         public void emitRecord(StreamRecord<IN> record) throws Exception {
             numRecordsIn.inc();
             operator.setKeyContextElement1(record);
-            operator.processElement(record);
+            operator.processElement(record); //@mark: 调用该算子的处理逻辑
         }
 
         @Override

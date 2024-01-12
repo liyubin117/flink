@@ -105,6 +105,7 @@ public class PipelinedSubpartition extends ResultSubpartition
      * Whether this subpartition is blocked (e.g. by exactly once checkpoint) and is waiting for
      * resumption.
      */
+    //@mark: 是否该sub partition被阻塞（检查点、等待恢复）
     @GuardedBy("buffers")
     boolean isBlocked = false;
 
@@ -451,7 +452,7 @@ public class PipelinedSubpartition extends ResultSubpartition
                     !isBlocked
                             && buffers.size() == 1
                             && buffers.peek().getBufferConsumer().isDataAvailable();
-            flushRequested = buffers.size() > 1 || notifyDataAvailable;
+            flushRequested = buffers.size() > 1 || notifyDataAvailable; //@mark: 如果buffer数量大于1说明已经执行过notifyDataAvailable()
         }
         if (notifyDataAvailable) {
             notifyDataAvailable();
@@ -534,9 +535,9 @@ public class PipelinedSubpartition extends ResultSubpartition
     }
 
     private void notifyPriorityEvent(int prioritySequenceNumber) {
-        final PipelinedSubpartitionView readView = this.readView;
+        final PipelinedSubpartitionView readView = this.readView; //@mark: readView是PipelinedSubpartitionView的消费者视图对象
         if (readView != null) {
-            readView.notifyPriorityEvent(prioritySequenceNumber);
+            readView.notifyPriorityEvent(prioritySequenceNumber); //@mark: 通知readView数据可用了
         }
     }
 

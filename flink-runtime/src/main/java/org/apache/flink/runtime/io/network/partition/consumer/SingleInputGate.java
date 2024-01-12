@@ -609,11 +609,12 @@ public class SingleInputGate extends IndexedInputGate {
         return getNextBufferOrEvent(true);
     }
 
+    //@mark: 获取下一个BufferOrEvent，被StreamTaskNetworkInput调用
     @Override
     public Optional<BufferOrEvent> pollNext() throws IOException, InterruptedException {
         return getNextBufferOrEvent(false);
     }
-
+    //@mark: 返回BufferOrEvent，CheckpointBarrier是一个Event，Buffer是数据
     private Optional<BufferOrEvent> getNextBufferOrEvent(boolean blocking)
             throws IOException, InterruptedException {
         if (hasReceivedAllEndOfPartitionEvents) {
@@ -893,7 +894,7 @@ public class SingleInputGate extends IndexedInputGate {
      */
     private boolean queueChannelUnsafe(InputChannel channel, boolean priority) {
         assert Thread.holdsLock(inputChannelsWithData);
-
+        //@mark: 判断此channel是否已在队列中，如果已在队列中，且优先级不高，则不需要再次加入队列
         final boolean alreadyEnqueued =
                 enqueuedInputChannelsWithData.get(channel.getChannelIndex());
         if (alreadyEnqueued
@@ -902,7 +903,7 @@ public class SingleInputGate extends IndexedInputGate {
             return false;
         }
 
-        inputChannelsWithData.add(channel, priority, alreadyEnqueued);
+        inputChannelsWithData.add(channel, priority, alreadyEnqueued); //@mark: 加入到优先级队列
         if (!alreadyEnqueued) {
             enqueuedInputChannelsWithData.set(channel.getChannelIndex());
         }
@@ -917,7 +918,7 @@ public class SingleInputGate extends IndexedInputGate {
                 throw new IllegalStateException("Released");
             }
 
-            if (blocking) {
+            if (blocking) { //@mark: 若阻塞则等待
                 inputChannelsWithData.wait();
             } else {
                 availabilityHelper.resetUnavailable();

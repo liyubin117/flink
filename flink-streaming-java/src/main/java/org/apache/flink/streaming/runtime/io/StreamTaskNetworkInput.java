@@ -175,15 +175,15 @@ public final class StreamTaskNetworkInput<T> implements StreamTaskInput<T> {
                     return InputStatus.MORE_AVAILABLE;
                 }
             }
-
+            //@mark: 调用CheckpointedInputGate.pollNext()获取下一个BufferOrEvent
             Optional<BufferOrEvent> bufferOrEvent = checkpointedInputGate.pollNext();
             if (bufferOrEvent.isPresent()) {
                 // return to the mailbox after receiving a checkpoint barrier to avoid processing of
                 // data after the barrier before checkpoint is performed for unaligned checkpoint
                 // mode
-                if (bufferOrEvent.get().isBuffer()) {
+                if (bufferOrEvent.get().isBuffer()) { //@mark: 若是Buffer
                     processBuffer(bufferOrEvent.get());
-                } else {
+                } else { //@mark: 若是Event
                     processEvent(bufferOrEvent.get());
                     return InputStatus.MORE_AVAILABLE;
                 }
@@ -201,7 +201,7 @@ public final class StreamTaskNetworkInput<T> implements StreamTaskInput<T> {
 
     private void processElement(StreamElement recordOrMark, DataOutput<T> output) throws Exception {
         if (recordOrMark.isRecord()) {
-            output.emitRecord(recordOrMark.asRecord());
+            output.emitRecord(recordOrMark.asRecord()); //@mark: 调用StreamTaskNetworkOutput.emitRecord()
         } else if (recordOrMark.isWatermark()) {
             statusWatermarkValve.inputWatermark(
                     recordOrMark.asWatermark(), flattenedChannelIndices.get(lastChannel), output);
@@ -236,7 +236,7 @@ public final class StreamTaskNetworkInput<T> implements StreamTaskInput<T> {
         checkState(
                 currentRecordDeserializer != null,
                 "currentRecordDeserializer has already been released");
-
+        //@mark: 继续使用MemorySegment序列化成字节数组
         currentRecordDeserializer.setNextBuffer(bufferOrEvent.getBuffer());
     }
 

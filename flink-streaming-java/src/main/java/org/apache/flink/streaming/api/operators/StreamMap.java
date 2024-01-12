@@ -35,6 +35,7 @@ public class StreamMap<IN, OUT> extends AbstractUdfStreamOperator<OUT, MapFuncti
 
     @Override
     public void processElement(StreamRecord<IN> element) throws Exception {
+        //@mark: map function转换原元素后生成新的元素，再把原元素替换成新的，由ChainingOutput对象输出
         output.collect(element.replace(userFunction.map(element.getValue())));
     }
 }

@@ -72,7 +72,7 @@ public class StreamSource<OUT, SRC extends SourceFunction<OUT>>
             final Output<StreamRecord<OUT>> collector,
             final OperatorChain<?, ?> operatorChain)
             throws Exception {
-
+        //@mark: 获取时间语义
         final TimeCharacteristic timeCharacteristic = getOperatorConfig().getTimeCharacteristic();
 
         final Configuration configuration =
@@ -95,7 +95,7 @@ public class StreamSource<OUT, SRC extends SourceFunction<OUT>>
 
         final long watermarkInterval =
                 getRuntimeContext().getExecutionConfig().getAutoWatermarkInterval();
-
+        //@mark: 获取operator的执行上下文对象
         this.ctx =
                 StreamSourceContexts.getSourceContext(
                         timeCharacteristic,
@@ -107,7 +107,7 @@ public class StreamSource<OUT, SRC extends SourceFunction<OUT>>
                         -1);
 
         try {
-            //@mark: 调用StreamSource operator中的自定义的读方法
+            //@mark: 调用StreamSource operator中的自定义的读function
             userFunction.run(ctx);
 
             // if we get here, then the user function either exited after being done (finite source)

@@ -151,6 +151,7 @@ public class PipelinedResultPartition extends BufferWritingResultPartition
 
     @Override
     public void flush(int targetSubpartition) {
+        //@mark: flush数据到对应的subpartition
         flushSubpartition(targetSubpartition, false);
     }
 

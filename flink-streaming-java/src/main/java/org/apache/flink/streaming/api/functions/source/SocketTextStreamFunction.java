@@ -89,7 +89,7 @@ public class SocketTextStreamFunction implements SourceFunction<String> {
         this.maxNumRetries = maxNumRetries;
         this.delayBetweenRetries = delayBetweenRetries;
     }
-
+    //@mark: 读socket网络数据的逻辑执行体
     @Override
     public void run(SourceContext<String> ctx) throws Exception {
         final StringBuilder buffer = new StringBuilder();
@@ -107,12 +107,13 @@ public class SocketTextStreamFunction implements SourceFunction<String> {
 
                     char[] cbuf = new char[8192];
                     int bytesRead;
+                    //@mark: BufferedReader#read阻塞式读数据
                     while (isRunning && (bytesRead = reader.read(cbuf)) != -1) {
-                        buffer.append(cbuf, 0, bytesRead);
+                        buffer.append(cbuf, 0, bytesRead); //@mark: 读到的数据加到buffer
                         int delimPos;
                         while (buffer.length() >= delimiter.length()
-                                && (delimPos = buffer.indexOf(delimiter)) != -1) {
-                            String record = buffer.substring(0, delimPos);
+                                && (delimPos = buffer.indexOf(delimiter)) != -1) { //@mark: 当读到分隔符时
+                            String record = buffer.substring(0, delimPos); //@mark: 截取分隔符之前的数据形成一条record
                             // truncate trailing carriage return
                             if (delimiter.equals("\n") && record.endsWith("\r")) {
                                 record = record.substring(0, record.length() - 1);

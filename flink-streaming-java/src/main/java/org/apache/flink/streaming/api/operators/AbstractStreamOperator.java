@@ -169,6 +169,7 @@ public abstract class AbstractStreamOperator<OUT>
                     environment
                             .getMetricGroup()
                             .getOrAddOperator(config.getOperatorID(), config.getOperatorName());
+            //@mark: 此处是对原有output包装成CountingOutput，增加计数功能
             this.output =
                     new CountingOutput<>(
                             output,

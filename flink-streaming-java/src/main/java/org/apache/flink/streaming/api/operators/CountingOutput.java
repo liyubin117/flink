@@ -46,8 +46,8 @@ public class CountingOutput<OUT> implements Output<StreamRecord<OUT>> {
 
     @Override
     public void collect(StreamRecord<OUT> record) {
-        numRecordsOut.inc();
-        output.collect(record);
+        numRecordsOut.inc(); //@mark: numRecordsOut metric加1
+        output.collect(record); //@mark: ChainingOutput对象输出
     }
 
     @Override

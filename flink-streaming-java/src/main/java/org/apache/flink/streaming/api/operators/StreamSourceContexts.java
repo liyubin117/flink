@@ -314,6 +314,7 @@ public class StreamSourceContexts {
 
         @Override
         protected void processAndCollect(T element) {
+            //@mark: 序列化读到的数据成StreamRecord对象，然后由CountingOutput对象输出
             output.collect(reuse.replace(element));
         }
 

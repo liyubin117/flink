@@ -180,7 +180,7 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>> extends Ab
     protected final StreamConfig configuration;
 
     /** Our state backend. We use this to create checkpoint streams and a keyed state backend. */
-    //@mark: 状态后端，一般使用FSStateBackend
+    //@mark: 状态后端，根据flink-conf.yaml中的state.backend配置，创建对应的StateBackend
     protected final StateBackend stateBackend;
 
     private final SubtaskCheckpointCoordinator subtaskCheckpointCoordinator;
@@ -329,6 +329,7 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>> extends Ab
                         this::prepareInputSnapshot);
 
         // if the clock is not already set, then assign a default TimeServiceProvider
+        //@mark: 构建定时服务，若未定义则使用SystemProcessingTimeService
         if (timerService == null) {
             ThreadFactory timerThreadFactory =
                     new DispatcherThreadFactory(
@@ -395,7 +396,7 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>> extends Ab
      * @throws Exception on any problems in the action.
      */
     protected void processInput(MailboxDefaultAction.Controller controller) throws Exception {
-        InputStatus status = inputProcessor.processInput();
+        InputStatus status = inputProcessor.processInput(); //@mark: 调用StreamOneInputProcessor#processInput获取输入
         if (status == InputStatus.MORE_AVAILABLE && recordWriter.isAvailable()) {
             return;
         }
@@ -515,11 +516,11 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>> extends Ab
     protected void beforeInvoke() throws Exception {
         disposedOperators = false;
         LOG.debug("Initializing {}.", getName());
-
+        //@mark: 构建 OperatorChain
         operatorChain = new OperatorChain<>(this, recordWriter);
         mainOperator = operatorChain.getMainOperator();
 
-        // task specific initialization
+        //初始化 task specific initialization
         init();
 
         // save the work of reloading state, etc, if the task is already canceled
@@ -540,15 +541,16 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>> extends Ab
                                     .getSequentialChannelStateReader();
                     // TODO: for UC rescaling, reenable notifyAndBlockOnCompletion for non-iterative
                     // jobs
+                    //@mark: 该Task读ResultPartitionWriter state
                     reader.readOutputData(getEnvironment().getAllWriters(), false);
-
+                    //@mark: 初始化状态并open链中从尾到头的所有运算符，与StreamOperator.close()从头到尾相反
                     operatorChain.initializeStateAndOpenOperators(
                             createStreamTaskStateInitializer());
 
                     channelIOExecutor.execute(
                             () -> {
                                 try {
-                                    //@mark: 该Task读InputGate数据
+                                    //@mark: 该Task读InputGate state
                                     reader.readInputData(getEnvironment().getAllInputGates());
                                 } catch (Exception e) {
                                     asyncExceptionHandler.handleAsyncException(

@@ -60,9 +60,10 @@ public final class StreamOneInputProcessor<IN> implements StreamInputProcessor {
         return input.getAvailableFuture();
     }
 
+    //@mark: 被StreamTask#processInput调用
     @Override
     public InputStatus processInput() throws Exception {
-        InputStatus status = input.emitNext(output);
+        InputStatus status = input.emitNext(output); //@mark: 调用StreamTaskNetworkInput#emitNext，用于shuffle中读上游chain的输出数据
 
         if (status == InputStatus.END_OF_INPUT) {
             endOfInputAware.endInput(input.getInputIndex() + 1);

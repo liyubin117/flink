@@ -89,7 +89,7 @@ class ChainingOutput<T> implements WatermarkGaugeExposingOutput<StreamRecord<T>>
             // we are not responsible for emitting to the main output.
             return;
         }
-
+        //@mark: 跳转到本chain的下一个operator处理
         pushToOperator(record);
     }
 
@@ -107,9 +107,9 @@ class ChainingOutput<T> implements WatermarkGaugeExposingOutput<StreamRecord<T>>
             @SuppressWarnings("unchecked")
             StreamRecord<T> castRecord = (StreamRecord<T>) record;
 
-            numRecordsIn.inc();
+            numRecordsIn.inc(); //@mark: numRecordsIn metric加1
             input.setKeyContextElement(castRecord);
-            input.processElement(castRecord);
+            input.processElement(castRecord); //@mark: 调用下一个Input算子processElement处理，如果下一个算子是map，则调用StreamMap#processElement
         } catch (Exception e) {
             throw new ExceptionInChainedOperatorException(e);
         }

@@ -98,6 +98,7 @@ public class RecordWriterOutput<OUT> implements WatermarkGaugeExposingOutput<Str
         serializationDelegate.setInstance(record);
 
         try {
+            //@mark: 一般是调用ChannelSelectorRecordWriter#emit，若是广播则调用BroadcastRecordWriter#emit
             recordWriter.emit(serializationDelegate);
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage(), e);

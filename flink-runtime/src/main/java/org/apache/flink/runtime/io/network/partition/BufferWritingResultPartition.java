@@ -124,7 +124,7 @@ public abstract class BufferWritingResultPartition extends ResultPartition {
             finishBroadcastBufferBuilder();
             finishUnicastBufferBuilder(targetSubpartition);
         }
-
+        //@mark: 调用ResultSubpartition#flush执行写数据
         subpartitions[targetSubpartition].flush();
     }
 

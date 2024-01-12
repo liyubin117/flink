@@ -150,6 +150,7 @@ public class OperatorChain<OUT, OP extends StreamOperator<OUT>>
 
         // create the final output stream writers
         // we iterate through all the out edges from this job vertex and create a stream output
+        //@mark: 为每一个出边创建对应的RecordWriterOutput
         List<StreamEdge> outEdgesInOrder = configuration.getOutEdgesInOrder(userCodeClassloader);
         Map<StreamEdge, RecordWriterOutput<?>> streamOutputMap =
                 new HashMap<>(outEdgesInOrder.size());
@@ -168,6 +169,7 @@ public class OperatorChain<OUT, OP extends StreamOperator<OUT>>
             // we create the chain of operators and grab the collector that leads into the chain
             List<StreamOperatorWrapper<?, ?>> allOpWrappers =
                     new ArrayList<>(chainedConfigs.size());
+            //@mark: 为每个出边创建对应的WatermarkGaugeExposingOutput
             this.mainOperatorOutput =
                     createOutputCollector(
                             containingTask,
@@ -354,6 +356,7 @@ public class OperatorChain<OUT, OP extends StreamOperator<OUT>>
          * Chained sources are closed when {@link
          * org.apache.flink.streaming.runtime.io.StreamTaskSourceInput} are being closed.
          */
+        //@mark: 向operator chain外输出
         return new ChainingOutput<>(input, metricGroup, this, outputTag, null);
     }
 
@@ -714,6 +717,7 @@ public class OperatorChain<OUT, OP extends StreamOperator<OUT>>
      *
      * @param allOperatorWrappers is an operator wrapper list of reverse topological order
      */
+    //@mark: allOperatorWrappers是反向存储的，此处反转链表
     private StreamOperatorWrapper<?, ?> linkOperatorWrappers(
             List<StreamOperatorWrapper<?, ?>> allOperatorWrappers) {
         StreamOperatorWrapper<?, ?> previous = null;

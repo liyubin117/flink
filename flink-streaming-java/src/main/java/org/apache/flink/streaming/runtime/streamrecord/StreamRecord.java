@@ -96,6 +96,7 @@ public final class StreamRecord<T> extends StreamElement {
      * @param element Element to set in this stream value
      * @return Returns the StreamElement with replaced value
      */
+    //@mark: 将当前存储的值替换为给定的新值。这将返回一个 StreamElement，其泛型类型参数与新值匹配，同时保留旧时间戳
     @SuppressWarnings("unchecked")
     public <X> StreamRecord<X> replace(X element) {
         this.value = (T) element;

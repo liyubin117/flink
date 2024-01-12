@@ -51,6 +51,7 @@ public final class ChannelSelectorRecordWriter<T extends IOReadableWritable>
 
     @Override
     public void emit(T record) throws IOException {
+        //@mark: 根据ChannelSelector策略选择对应的分区发送数据
         emit(record, channelSelector.selectChannel(record));
     }
 

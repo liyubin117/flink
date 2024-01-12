@@ -80,6 +80,7 @@ public class KeyedProcessOperator<K, IN, OUT>
     public void processElement(StreamRecord<IN> element) throws Exception {
         collector.setTimestamp(element);
         context.element = element;
+        //@mark: 调用KeyedProcessFunction的processElement方法
         userFunction.processElement(element.getValue(), context, collector);
         context.element = null;
     }
