@@ -52,6 +52,7 @@ import org.apache.flink.table.operations.Operation;
 import org.apache.flink.table.operations.SinkModifyOperation;
 import org.apache.flink.table.operations.SourceQueryOperation;
 import org.apache.flink.table.operations.ddl.AddPartitionsOperation;
+import org.apache.flink.table.operations.ddl.AlterCatalogOptionsOperation;
 import org.apache.flink.table.operations.ddl.AlterDatabaseOperation;
 import org.apache.flink.table.operations.ddl.AlterTableChangeOperation;
 import org.apache.flink.table.operations.ddl.AlterTableRenameOperation;
@@ -1057,6 +1058,23 @@ public class SqlDdlToOperationConverterTest extends SqlNodeToOperationConversion
                                 + "functionLanguage='SCALA', "
                                 + "functionResource='[ResourceUri{resourceType=JAR, uri='file:///path/to/test.jar'}]'}], "
                                 + "ignoreIfExists: [false], functionLanguage: [SCALA])");
+    }
+
+    @Test
+    public void testAlterCatalog() {
+        // test alter catalog options
+        final String sql1 = "ALTER CATALOG cat2 SET ('K1' = 'V1', 'k2' = 'v2')";
+        Operation operation = parse(sql1);
+        assertThat(operation).isInstanceOf(AlterCatalogOptionsOperation.class);
+        assertThat(((AlterCatalogOptionsOperation) operation).getCatalogName()).isEqualTo("cat2");
+        assertThat(operation.asSummaryString())
+                .isEqualTo("DESCRIBE CATALOG: (identifier: [cat1], isExtended: [false])");
+
+        Map<String, String> expectedOptions = new HashMap<>();
+        expectedOptions.put("K1", "V1");
+        expectedOptions.put("k2", "v2");
+        assertThat(((AlterCatalogOptionsOperation) operation).getProperties())
+                .isEqualTo(expectedOptions);
     }
 
     @Test
