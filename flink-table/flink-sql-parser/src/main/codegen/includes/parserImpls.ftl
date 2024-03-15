@@ -77,12 +77,14 @@ SqlDescribeCatalog SqlDescribeCatalog() :
 {
     SqlIdentifier catalogName;
     SqlParserPos pos;
+    boolean isExtended = false;
 }
 {
     ( <DESCRIBE> | <DESC> ) <CATALOG> { pos = getPos();}
+    [ <EXTENDED> { isExtended = true;} ]
     catalogName = SimpleIdentifier()
     {
-        return new SqlDescribeCatalog(pos, catalogName);
+        return new SqlDescribeCatalog(pos, catalogName, isExtended);
     }
 
 }
