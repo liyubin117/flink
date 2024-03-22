@@ -197,7 +197,7 @@ public class FileCatalogStore extends AbstractCatalogStore {
                         YAML_MAPPER.readValue(is, new TypeReference<Map<String, String>>() {});
 
                 CatalogDescriptor catalog =
-                        CatalogDescriptor.of(catalogName, Configuration.fromMap(configMap));
+                        CatalogDescriptor.of(catalogName, Configuration.fromMap(configMap), null); //TODO
 
                 return Optional.of(catalog);
             }

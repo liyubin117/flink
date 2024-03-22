@@ -39,10 +39,13 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
 public class CreateCatalogOperation implements CreateOperation {
     private final String catalogName;
     private final Map<String, String> properties;
+    private final String comment;
 
-    public CreateCatalogOperation(String catalogName, Map<String, String> properties) {
+    public CreateCatalogOperation(
+            String catalogName, Map<String, String> properties, String comment) {
         this.catalogName = checkNotNull(catalogName);
         this.properties = Collections.unmodifiableMap(checkNotNull(properties));
+        this.comment = comment;
     }
 
     public String getCatalogName() {
@@ -53,10 +56,15 @@ public class CreateCatalogOperation implements CreateOperation {
         return properties;
     }
 
+    public String getComment() {
+        return comment;
+    }
+
     @Override
     public String asSummaryString() {
         Map<String, Object> params = new LinkedHashMap<>();
         params.put("catalogName", catalogName);
+        params.put("comment", properties);
         params.put("properties", properties);
 
         return OperationUtils.formatWithChildren(
@@ -69,7 +77,7 @@ public class CreateCatalogOperation implements CreateOperation {
             ctx.getCatalogManager()
                     .createCatalog(
                             catalogName,
-                            CatalogDescriptor.of(catalogName, Configuration.fromMap(properties)));
+                            CatalogDescriptor.of(catalogName, Configuration.fromMap(properties), comment));
 
             return TableResultImpl.TABLE_RESULT_OK;
         } catch (CatalogException e) {

@@ -117,9 +117,12 @@ public class ShowCreateUtil {
 
     public static String buildShowCreateCatalogRow(CatalogDescriptor catalogDescriptor) {
         final String printIndent = "  ";
+        final String resultFormat = "CREATE CATALOG %s COMMENT '%s'%s WITH (%s%s%s)%s";
         return String.format(
-                "CREATE CATALOG %s WITH (%s%s%s)%s",
+                resultFormat,
                 escapeIdentifier(catalogDescriptor.getCatalogName()),
+                EncodingUtils.escapeSingleQuotes(catalogDescriptor.getComment()),
+                System.lineSeparator(),
                 System.lineSeparator(),
                 extractFormattedOptions(catalogDescriptor.getConfiguration().toMap(), printIndent)
                         .orElse(""),

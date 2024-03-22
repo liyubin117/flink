@@ -84,7 +84,7 @@ public class DescribeCatalogOperation implements Operation, ExecutableOperation 
                                         "Type",
                                         properties.getOrDefault(
                                                 CommonCatalogOptions.CATALOG_TYPE.key(), "")),
-                                Arrays.asList("Comment", "") // TODO: retain for future needs
+                                Arrays.asList("Comment", catalogDescriptor.getComment())
                                 ));
         if (isExtended) {
             rows.add(Arrays.asList("Properties", convertPropertiesToString(properties)));

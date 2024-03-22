@@ -111,10 +111,17 @@ SqlCreate SqlCreateCatalog(Span s, boolean replace) :
     SqlParserPos startPos;
     SqlIdentifier catalogName;
     SqlNodeList propertyList = SqlNodeList.EMPTY;
+    SqlCharStringLiteral comment = null;
 }
 {
     <CATALOG> { startPos = getPos(); }
     catalogName = SimpleIdentifier()
+    [ <COMMENT> <QUOTED_STRING>
+        {
+            String p = SqlParserUtil.parseString(token.image);
+            comment = SqlLiteral.createCharString(p, getPos());
+        }
+    ]
     [
         <WITH>
         propertyList = TableProperties()
@@ -122,7 +129,8 @@ SqlCreate SqlCreateCatalog(Span s, boolean replace) :
     {
         return new SqlCreateCatalog(startPos.plus(getPos()),
             catalogName,
-            propertyList);
+            propertyList,
+            comment);
     }
 }
 

@@ -20,6 +20,7 @@ package org.apache.flink.sql.parser.ddl;
 
 import org.apache.flink.sql.parser.SqlUnparseUtils;
 
+import org.apache.calcite.sql.SqlCharStringLiteral;
 import org.apache.calcite.sql.SqlCreate;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlKind;
@@ -31,7 +32,10 @@ import org.apache.calcite.sql.SqlWriter;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.util.ImmutableNullableList;
 
+import javax.annotation.Nullable;
+
 import java.util.List;
+import java.util.Optional;
 
 import static java.util.Objects.requireNonNull;
 
@@ -45,11 +49,17 @@ public class SqlCreateCatalog extends SqlCreate {
 
     private final SqlNodeList propertyList;
 
+    @Nullable private final SqlCharStringLiteral comment;
+
     public SqlCreateCatalog(
-            SqlParserPos position, SqlIdentifier catalogName, SqlNodeList propertyList) {
+            SqlParserPos position,
+            SqlIdentifier catalogName,
+            SqlNodeList propertyList,
+            SqlCharStringLiteral comment) {
         super(OPERATOR, position, false, false);
         this.catalogName = requireNonNull(catalogName, "catalogName cannot be null");
         this.propertyList = requireNonNull(propertyList, "propertyList cannot be null");
+        this.comment = comment;
     }
 
     @Override
@@ -70,10 +80,20 @@ public class SqlCreateCatalog extends SqlCreate {
         return propertyList;
     }
 
+    public Optional<SqlCharStringLiteral> getComment() {
+        return Optional.ofNullable(comment);
+    }
+
     @Override
     public void unparse(SqlWriter writer, int leftPrec, int rightPrec) {
         writer.keyword("CREATE CATALOG");
         catalogName.unparse(writer, leftPrec, rightPrec);
+
+        if (comment != null) {
+            writer.newlineAndIndent();
+            writer.keyword("COMMENT");
+            comment.unparse(writer, leftPrec, rightPrec);
+        }
 
         if (this.propertyList.size() > 0) {
             writer.keyword("WITH");
